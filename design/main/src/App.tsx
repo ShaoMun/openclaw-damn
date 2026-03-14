@@ -1,18 +1,12 @@
-"use client";
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-import { useEffect } from "react";
-import { Scene } from "@/components/3d/Scene";
-import { Dashboard } from "@/components/ui/Dashboard";
-import { useStore } from "@/lib/store";
-import { createMockData } from "@/lib/mockData";
+import { Scene } from './components/3d/Scene';
+import { Dashboard } from './components/ui/Dashboard';
 
-export default function Home() {
-  const hydrate = useStore((s) => s.hydrate);
-
-  useEffect(() => {
-    hydrate(createMockData());
-  }, [hydrate]);
-
+export default function App() {
   return (
     <div className="relative w-full h-screen bg-[#050505] overflow-hidden font-sans selection:bg-white/30">
       {/* Background Grid Pattern */}
