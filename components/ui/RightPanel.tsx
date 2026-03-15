@@ -75,8 +75,6 @@ export function RightPanel() {
   const drones = useStore(selectDrones);
   const selectedId = useStore((s) => s.selectedDroneId);
   const selectDrone = useStore((s) => s.selectDrone);
-  const showCoverageZones = useStore((s) => s.showCoverageZones);
-  const toggleCoverageZones = useStore((s) => s.toggleCoverageZones);
 
   if (drones.length === 0) return null;
 
@@ -102,20 +100,6 @@ export function RightPanel() {
       </div>
 
       <div className="mt-4 pt-3 border-t border-white/5 flex flex-col gap-2.5">
-        {/* WiFi Coverage Zone Toggle */}
-        <button
-          onClick={toggleCoverageZones}
-          className="flex items-center justify-between w-full px-1 hover:opacity-80 transition-opacity"
-        >
-          <div className="flex items-center gap-2">
-            <Wifi className="w-3 h-3 text-white/30" />
-            <span className="text-[8px] font-mono text-white/40 uppercase tracking-[0.15em]">Coverage Zones</span>
-          </div>
-          {/* Toggle Pill */}
-          <div className={`relative w-7 h-3.5 rounded-full transition-colors duration-200 ${showCoverageZones ? 'bg-white/40' : 'bg-white/10'}`}>
-            <div className={`absolute top-0.5 w-2.5 h-2.5 rounded-full bg-white transition-all duration-200 ${showCoverageZones ? 'left-4' : 'left-0.5'}`} />
-          </div>
-        </button>
 
         <div className="text-[8px] font-mono text-white/20 uppercase tracking-[0.2em] italic">
           Pulse transmission: encrypted

@@ -51,7 +51,6 @@ export interface UIState {
   selectedDroneId: string | null;
   cameraFocusPoint: [number, number, number] | null;
   showRelayPaths: boolean;
-  showCoverageZones: boolean;
   showGridOverlay: boolean;
 }
 
@@ -80,7 +79,6 @@ interface AppStore extends UIState {
   selectDrone: (id: string | null) => void;
   setCameraFocus: (point: [number, number, number] | null) => void;
   toggleRelayPaths: () => void;
-  toggleCoverageZones: () => void;
   toggleGridOverlay: () => void;
 }
 
@@ -96,7 +94,6 @@ export const useStore = create<AppStore>((set) => ({
   selectedDroneId: null,
   cameraFocusPoint: null,
   showRelayPaths: true,
-  showCoverageZones: true,
   showGridOverlay: true,
 
   // Data actions
@@ -119,7 +116,6 @@ export const useStore = create<AppStore>((set) => ({
   selectDrone: (id) => set({ selectedDroneId: id, cameraFocusPoint: null }),
   setCameraFocus: (point) => set({ cameraFocusPoint: point, selectedDroneId: null }),
   toggleRelayPaths: () => set((s) => ({ showRelayPaths: !s.showRelayPaths })),
-  toggleCoverageZones: () => set((s) => ({ showCoverageZones: !s.showCoverageZones })),
   toggleGridOverlay: () => set((s) => ({ showGridOverlay: !s.showGridOverlay })),
 }));
 
@@ -134,6 +130,5 @@ export const selectUI = (s: AppStore): UIState => ({
   selectedDroneId: s.selectedDroneId,
   cameraFocusPoint: s.cameraFocusPoint,
   showRelayPaths: s.showRelayPaths,
-  showCoverageZones: s.showCoverageZones,
   showGridOverlay: s.showGridOverlay,
 });

@@ -8,9 +8,9 @@ import { useStore, selectGrid, type CellState } from '@/lib/store';
 
 const STATE_COLOR: Record<CellState, THREE.Color> = {
   connected: new THREE.Color('#ffffff'),
-  dead:      new THREE.Color('#333333'), // darker for contrast in white theme
+  dead:      new THREE.Color('#333333'),
   covered:   new THREE.Color('#cccccc'),
-  sos:       new THREE.Color('#ffffff'), // still bright white for attention
+  sos:       new THREE.Color('#ffffff'),
 };
 
 const TILE_SIZE = 9.2;  // distinct gaps
@@ -27,8 +27,18 @@ export function GridOverlay() {
 
   const { count, baseColors } = useMemo(() => {
     const colors: THREE.Color[] = [];
+    const fadeStart = 50;
+    const fadeEnd = 95;
+
     gridCells.forEach((cell) => {
-      colors.push(STATE_COLOR[cell.state].clone());
+      const dist = Math.sqrt(cell.x * cell.x + cell.y * cell.y);
+      let fade = 1.0 - Math.max(0, Math.min(1, (dist - fadeStart) / (fadeEnd - fadeStart)));
+      // Square the fade for a smoother, steeper drop-off
+      fade = fade * fade;
+
+      const base = STATE_COLOR[cell.state].clone();
+      base.multiplyScalar(fade);
+      colors.push(base);
     });
     return { count: gridCells.length, baseColors: colors };
   }, [gridCells]);

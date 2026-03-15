@@ -16,7 +16,7 @@ const TerrainMaterial = shaderMaterial(
       new THREE.Vector2(50, 40),
       new THREE.Vector2(-20, -50)
     ],
-    uColorSafeBase: new THREE.Color('#777777'),
+    uColorSafeBase: new THREE.Color('#444444'),
     uColorSafeGlow: new THREE.Color('#ffffff'),
     uColorDanger: new THREE.Color('#ff2200'),
     uColorDangerCore: new THREE.Color(4.0, 0.5, 0.0), // High intensity for bloom
@@ -61,6 +61,12 @@ const TerrainMaterial = shaderMaterial(
     intensitySafe *= pulseSafe;
     intensitySafe = clamp(intensitySafe, 0.0, 1.0);
 
+    // Vignette: fade out towards edges
+    float distFromCenter = length(vPosition.xy);
+    float vignetteStart = 50.0;
+    float vignetteEnd = 100.0;
+    float vignette = 1.0 - smoothstep(vignetteStart, vignetteEnd, distFromCenter);
+
     vec3 finalColor = uColorSafeBase;
     
     // Mix safe glow
@@ -74,7 +80,7 @@ const TerrainMaterial = shaderMaterial(
       finalColor = mix(finalColor, dangerMix, intensityDanger * 1.5);
     }
 
-    float alpha = 0.4 + intensityDanger * 0.6 + intensitySafe * 0.4;
+    float alpha = (0.4 + intensityDanger * 0.6 + intensitySafe * 0.4) * vignette;
 
     gl_FragColor = vec4(finalColor, alpha);
   }
@@ -162,9 +168,6 @@ export function Terrain() {
       <mesh geometry={geometry}>
         {/* @ts-ignore */}
         <terrainMaterial ref={materialRef} wireframe transparent />
-      </mesh>
-      <mesh geometry={geometry} position={[0, 0, -2]}>
-        <meshBasicMaterial color="#777777" wireframe transparent opacity={0.15} />
       </mesh>
       <Markers markers={markers} />
     </group>
