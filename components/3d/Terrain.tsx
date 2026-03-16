@@ -136,19 +136,18 @@ const TerrainScansMaterial = shaderMaterial(
 
   vec3 getThermalColor(float t) {
     t = clamp(t, 0.0, 1.0);
-    vec3 deepBlue = vec3(0.0, 0.0, 0.6);
-    vec3 blue = vec3(0.0, 0.4, 1.0);
+    // Use raw, fully saturated, pure colors
+    vec3 blue = vec3(0.0, 0.0, 1.0);
     vec3 cyan = vec3(0.0, 1.0, 1.0);
     vec3 green = vec3(0.0, 1.0, 0.0);
     vec3 yellow = vec3(1.0, 1.0, 0.0);
     vec3 red = vec3(1.0, 0.0, 0.0);
     
-    // Skew the color mapping so the lower 60% of heat values are purely blue/cyan
-    if (t < 0.3) return mix(deepBlue, blue, t / 0.3);
-    if (t < 0.6) return mix(blue, cyan, (t - 0.3) / 0.3);
-    if (t < 0.8) return mix(cyan, green, (t - 0.6) / 0.2);
-    if (t < 0.9) return mix(green, yellow, (t - 0.8) / 0.1);
-    return mix(yellow, red, (t - 0.9) / 0.1);
+    // Smooth mix of raw colors
+    if (t < 0.25) return mix(blue, cyan, t / 0.25);
+    if (t < 0.5) return mix(cyan, green, (t - 0.25) / 0.25);
+    if (t < 0.75) return mix(green, yellow, (t - 0.5) / 0.25);
+    return mix(yellow, red, (t - 0.75) / 0.25);
   }
 
   void main() {
@@ -198,8 +197,8 @@ const TerrainScansMaterial = shaderMaterial(
 
     if (totalAlpha <= 0.0) discard;
     
-    // Boost contrast for ultra saturation!
-    totalColor = pow(totalColor, vec3(0.8)) * 2.0;
+    // Keep colors raw and bright without muddying them
+    totalColor = clamp(totalColor * 1.5, 0.0, 1.0); // Simple brightness boost keeping pure colors
 
     gl_FragColor = vec4(totalColor, clamp(totalAlpha, 0.0, 0.9));
   }
