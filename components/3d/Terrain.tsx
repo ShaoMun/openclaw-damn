@@ -136,25 +136,19 @@ const TerrainScansMaterial = shaderMaterial(
 
   vec3 getThermalColor(float t) {
     t = clamp(t, 0.0, 1.0);
-    vec3 deepBlue = vec3(0.0, 0.0, 1.0);
-    vec3 brightBlue = vec3(0.0, 0.5, 1.0);
-    vec3 purple = vec3(0.6, 0.0, 1.0);
-    vec3 magenta = vec3(1.0, 0.0, 0.5);
-    vec3 red = vec3(1.0, 0.0, 0.0);
-    vec3 orange = vec3(1.0, 0.5, 0.0);
-    vec3 yellow = vec3(1.0, 1.0, 0.0);
+    vec3 deepBlue = vec3(0.0, 0.0, 0.6);
+    vec3 blue = vec3(0.0, 0.4, 1.0);
+    vec3 cyan = vec3(0.0, 1.0, 1.0);
     vec3 green = vec3(0.0, 1.0, 0.0);
-    vec3 white = vec3(1.0, 1.0, 1.0);
+    vec3 yellow = vec3(1.0, 1.0, 0.0);
+    vec3 red = vec3(1.0, 0.0, 0.0);
     
-    // Tight banding for sharp, saturated colors
-    if (t < 0.15) return mix(deepBlue, brightBlue, t / 0.15);
-    if (t < 0.3) return mix(brightBlue, purple, (t - 0.15) / 0.15);
-    if (t < 0.45) return mix(purple, magenta, (t - 0.3) / 0.15);
-    if (t < 0.6) return mix(magenta, red, (t - 0.45) / 0.15);
-    if (t < 0.75) return mix(red, orange, (t - 0.6) / 0.15);
-    if (t < 0.85) return mix(orange, yellow, (t - 0.75) / 0.10);
-    if (t < 0.95) return mix(yellow, green, (t - 0.85) / 0.10);
-    return mix(green, white, (t - 0.95) / 0.05);
+    // Skew the color mapping so the lower 60% of heat values are purely blue/cyan
+    if (t < 0.3) return mix(deepBlue, blue, t / 0.3);
+    if (t < 0.6) return mix(blue, cyan, (t - 0.3) / 0.3);
+    if (t < 0.8) return mix(cyan, green, (t - 0.6) / 0.2);
+    if (t < 0.9) return mix(green, yellow, (t - 0.8) / 0.1);
+    return mix(yellow, red, (t - 0.9) / 0.1);
   }
 
   void main() {
@@ -188,12 +182,12 @@ const TerrainScansMaterial = shaderMaterial(
       float diff = mod(angle - sweepAngle + 6.28318, 6.28318);
       float beam = exp(-diff * 3.0);
 
-      float noiseVal = noise(vPosition.xy * 0.15 + elapsed * 0.8) * 0.5 + 0.5;
-      float heat = mix(0.0, 0.9, noiseVal);
-      heat += sin(dist * 0.4 - elapsed * 3.0) * 0.25;
+      float noiseVal = noise(vPosition.xy * 0.05 + elapsed * 0.5) * 0.5 + 0.5;
+      float heat = mix(0.0, 0.8, noiseVal);
+      heat += sin(dist * 0.15 - elapsed * 2.0) * 0.15;
 
       vec3 color = getThermalColor(heat);
-      color += vec3(1.0, 1.0, 1.0) * smoothstep(0.0, 0.05, diff) * (1.0 - smoothstep(0.05, 0.1, diff)); // Bright white beam edge
+      color += vec3(0.5, 0.8, 1.0) * smoothstep(0.0, 0.05, diff) * (1.0 - smoothstep(0.05, 0.1, diff)); // Cyan/Blue hot beam edge
 
       float alpha = 1.0 - smoothstep(radius * 0.8, radius, dist);
       alpha *= max(beam, 0.4) * fade;
