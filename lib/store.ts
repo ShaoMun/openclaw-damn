@@ -127,6 +127,9 @@ export interface UIState {
   activeScans: ActiveScan[];
   activeMessagePaths: Set<string>; // Set of drone ID pairs currently communicating
   activePowerPaths: Set<string>; // Set of drone ID pairs currently charging
+  establishedConnections: Set<string>; // Persistent connections (P2P or group)
+  droneGroups: Record<string, string[]>; // groupId -> array of droneIds
+  activeGroupId: string | null;
 }
 
 // ─── Store ───────────────────────────────────────────────────────────────────
@@ -194,6 +197,12 @@ interface AppStore extends UIState {
   // Active power
   setActivePowerPath: (fromDroneId: string, toDroneId: string, active: boolean) => void;
   clearActivePowerPaths: () => void;
+
+  // Persistent connections and groups
+  setConnection: (drone1: string, drone2: string, connected: boolean) => void;
+  joinGroup: (groupId: string, droneId: string) => void;
+  leaveGroup: (groupId: string, droneId: string) => void;
+  openGroupChat: (groupId: string | null) => void;
 }
 
 export const useStore = create<AppStore>((set) => ({
@@ -224,6 +233,9 @@ export const useStore = create<AppStore>((set) => ({
   activeScans: [],
   activeMessagePaths: new Set(),
   activePowerPaths: new Set(),
+  establishedConnections: new Set(),
+  droneGroups: {},
+  activeGroupId: null,
 
   // Data actions
   hydrate: (data) => set(data),
@@ -552,6 +564,48 @@ export const useStore = create<AppStore>((set) => ({
     }),
 
   clearActivePowerPaths: () => set({ activePowerPaths: new Set() }),
+
+  setConnection: (drone1, drone2, connected) =>
+    set((s) => {
+      const pathId = [drone1, drone2].sort().join('-');
+      const connections = new Set(s.establishedConnections);
+      if (connected) {
+        connections.add(pathId);
+      } else {
+        connections.delete(pathId);
+      }
+      return { establishedConnections: connections };
+    }),
+    
+  joinGroup: (groupId, droneId) =>
+    set((s) => {
+      const group = s.droneGroups[groupId] || [];
+      if (!group.includes(droneId)) {
+        return {
+          droneGroups: {
+            ...s.droneGroups,
+            [groupId]: [...group, droneId],
+          }
+        };
+      }
+      return s;
+    }),
+    
+  leaveGroup: (groupId, droneId) =>
+    set((s) => {
+      const group = s.droneGroups[groupId] || [];
+      if (group.includes(droneId)) {
+        return {
+          droneGroups: {
+            ...s.droneGroups,
+            [groupId]: group.filter(id => id !== droneId),
+          }
+        };
+      }
+      return s;
+    }),
+    
+  openGroupChat: (groupId) => set({ activeGroupId: groupId }),
 }));
 
 // ─── Selector helpers (prevent re-renders) ───────────────────────────────────
@@ -581,6 +635,9 @@ export const selectUI = (s: AppStore): UIState => ({
   activeScans: s.activeScans,
   activeMessagePaths: s.activeMessagePaths,
   activePowerPaths: s.activePowerPaths,
+  establishedConnections: s.establishedConnections,
+  droneGroups: s.droneGroups,
+  activeGroupId: s.activeGroupId,
 });
 
 // ─── Derived selectors ───────────────────────────────────────────────────────

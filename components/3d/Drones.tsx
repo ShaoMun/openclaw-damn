@@ -152,41 +152,6 @@ function DroneUnit({ drone }: { drone: Drone }) {
     
     // Fast Patrol logic for Relay Drones
     let isRelayPatrol = false;
-    if (drone.role === 'relay' && drone.status === 'online') {
-        const allDrones = useStore.getState().drones;
-        const onlineDrones = allDrones.filter(d => d.status === 'online' && d.id !== drone.id);
-        if (onlineDrones.length >= 2) {
-            isRelayPatrol = true;
-            let maxDist = 0;
-            let p1 = new THREE.Vector3(), p2 = new THREE.Vector3();
-            for(let i=0; i<onlineDrones.length; i++) {
-                for(let j=i+1; j<onlineDrones.length; j++) {
-                    const d1Pos = dronePositions.get(onlineDrones[i].id) || new THREE.Vector3(...onlineDrones[i].position);
-                    const d2Pos = dronePositions.get(onlineDrones[j].id) || new THREE.Vector3(...onlineDrones[j].position);
-                    const dist = d1Pos.distanceTo(d2Pos);
-                    if(dist > maxDist) { 
-                       maxDist = dist; 
-                       p1.copy(d1Pos); 
-                       p2.copy(d2Pos); 
-                    }
-                }
-            }
-            const time = clock.elapsedTime * 1.5; // Fast Speed
-            const t = (Math.sin(time + offset) + 1) / 2;
-            const targetX = p1.x + (p2.x - p1.x) * t;
-            const targetZ = p1.z + (p2.z - p1.z) * t;
-            
-            const target = new THREE.Vector3(targetX, localPositionRef.current.y, targetZ);
-            
-            localPositionRef.current.lerp(target, 0.08);
-            groupRef.current.position.copy(localPositionRef.current);
-            
-            // Randomly sync to state to ensure UI logic catches up
-            if (Math.random() < 0.05) {
-                updateDrone(drone.id, { position: [localPositionRef.current.x, localPositionRef.current.y, localPositionRef.current.z] });
-            }
-        }
-    }
     
     if (!isRelayPatrol) {
       // Interpolate towards target position if set

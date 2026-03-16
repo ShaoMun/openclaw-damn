@@ -16,108 +16,108 @@ const MISSION_CHANCE = 0.02;
 
 const IDLE_REASONING: Record<string, string[]> = {
   relay: [
-    "Checking relay chain integrity...",
-    "Monitoring signal strength between nodes...",
-    "Verifying data packet transmission...",
-    "Awaiting command from commander...",
-    "Relay path stable",
-    "Data throughput: optimal",
-    "Mesh network handshake complete",
+    "checkRelayChainIntegrity() - Success ✓",
+    "monitorSignalStrength() - Success ✓",
+    "verifyDataPacketTransmission() - Success ✓",
+    "awaitCommand() - Success ✓",
+    "validateRelayPath() - Success ✓",
+    "measureDataThroughput() - Success ✓",
+    "executeMeshNetworkHandshake() - Success ✓",
   ],
   wifi: [
-    "Scanning coverage area...",
-    "Monitoring connectivity nodes...",
-    "Signal strength optimal",
-    "Checking for new devices...",
-    "Coverage area secure",
-    "Bandwidth allocation: stable",
-    "Client connections: active",
+    "scanCoverageArea() - Success ✓",
+    "monitorConnectivityNodes() - Success ✓",
+    "evaluateSignalStrength() - Success ✓",
+    "scanForNewDevices() - Success ✓",
+    "secureCoverageArea() - Success ✓",
+    "allocateBandwidth() - Success ✓",
+    "pingClientConnections() - Success ✓",
   ],
   supply: [
-    "Checking inventory status...",
-    "Awaiting dispatch orders...",
-    "Verifying delivery coordinates...",
-    "Battery within operational range",
-    "Standby mode active",
-    "Navigation system: ready",
-    "Cargo capacity: available",
+    "checkInventoryStatus() - Success ✓",
+    "awaitDispatchOrders() - Success ✓",
+    "verifyDeliveryCoordinates() - Success ✓",
+    "checkBatteryOperationalRange() - Success ✓",
+    "activateStandbyMode() - Success ✓",
+    "initNavigationSystem() - Success ✓",
+    "validateCargoCapacity() - Success ✓",
   ],
   scout: [
-    "Conducting aerial reconnaissance...",
-    "Scanning terrain for obstacles...",
-    "Monitoring atmospheric conditions...",
-    "Analyzing thermal signatures...",
-    "Area clear of threats",
-    "Navigation waypoints updated",
-    "Reconnaissance data collected",
+    "conductAerialReconnaissance() - Success ✓",
+    "scanTerrainObstacles() - Success ✓",
+    "monitorAtmosphericConditions() - Success ✓",
+    "analyzeThermalSignatures() - Success ✓",
+    "verifyAreaClear() - Success ✓",
+    "updateNavigationWaypoints() - Success ✓",
+    "collectReconnaissanceData() - Success ✓",
   ],
   charger: [
-    "Monitoring fleet battery levels...",
-    "Maintaining power reserves...",
-    "Ready to deploy charging tether...",
-    "Calculating optimal refueling routes...",
-    "Awaiting low battery signals...",
-    "Power banks at maximum capacity",
-    "Scanning for active drones needing recharge",
+    "monitorFleetBatteryLevels() - Success ✓",
+    "maintainPowerReserves() - Success ✓",
+    "deployChargingTether() - Success ✓",
+    "calculateOptimalRefuelingRoutes() - Success ✓",
+    "awaitLowBatterySignals() - Success ✓",
+    "chargePowerBanks() - Success ✓",
+    "scanForActiveDrones() - Success ✓",
   ],
 };
 
 const CONTEXT_REASONING: Record<string, { condition: (d: any) => boolean; text: (d: any) => string }[]> = {
   relay: [
-    { condition: (d) => d.battery < 20, text: (d) => `LOW BATTERY WARNING: ${d.id} at ${d.battery.toFixed(0)}% - initiating return to base` },
-    { condition: (d) => d.battery < 10, text: (d) => `CRITICAL: ${d.id} battery critical - immediate recall required` },
-    { condition: (d) => d.status === 'syncing', text: (d) => `${d.id} syncing data packets...` },
-    { condition: (d) => d.status === 'offline', text: (d) => `${d.id} offline - connection lost` },
+    { condition: (d) => d.battery < 20, text: (d) => `triggerLowBatteryWarning() - Warning ⚠ | Level: ${d.battery.toFixed(0)}%` },
+    { condition: (d) => d.battery < 10, text: (d) => `executeImmediateRecall() - Critical ⚠ | Level: ${d.battery.toFixed(0)}%` },
+    { condition: (d) => d.status === 'syncing', text: (d) => `syncDataPackets() - In Progress ⟳` },
+    { condition: (d) => d.status === 'offline', text: (d) => `diagnoseConnectionLoss() - Failed ❌` },
   ],
   wifi: [
-    { condition: (d) => d.battery < 20, text: (d) => `LOW BATTERY WARNING: ${d.id} at ${d.battery.toFixed(0)}}% - initiating return to base` },
-    { condition: (d) => d.battery < 10, text: (d) => `CRITICAL: ${d.id} battery critical - immediate recall required` },
-    { condition: (d) => d.status === 'offline', text: (d) => `${d.id} offline - coverage gap detected` },
+    { condition: (d) => d.battery < 20, text: (d) => `triggerLowBatteryWarning() - Warning ⚠ | Level: ${d.battery.toFixed(0)}%` },
+    { condition: (d) => d.battery < 10, text: (d) => `executeImmediateRecall() - Critical ⚠ | Level: ${d.battery.toFixed(0)}%` },
+    { condition: (d) => d.status === 'offline', text: (d) => `detectCoverageGap() - Failed ❌` },
   ],
   supply: [
-    { condition: (d) => d.battery < 20, text: (d) => `LOW BATTERY WARNING: ${d.id} at ${d.battery.toFixed(0)}% - initiating return to base` },
-    { condition: (d) => d.battery < 10, text: (d) => `CRITICAL: ${d.id} battery critical - aborting mission` },
-    { condition: (d) => d.status === 'syncing', text: (d) => `${d.id} calculating optimal delivery route...` },
+    { condition: (d) => d.battery < 20, text: (d) => `triggerLowBatteryWarning() - Warning ⚠ | Level: ${d.battery.toFixed(0)}%` },
+    { condition: (d) => d.battery < 10, text: (d) => `abortMission() - Critical ⚠ | Level: ${d.battery.toFixed(0)}%` },
+    { condition: (d) => d.status === 'syncing', text: (d) => `calculateOptimalDeliveryRoute() - In Progress ⟳` },
   ],
   scout: [
-    { condition: (d) => d.battery < 20, text: (d) => `LOW BATTERY WARNING: ${d.id} at ${d.battery.toFixed(0)}% - returning to base` },
-    { condition: (d) => d.battery < 10, text: (d) => `CRITICAL: ${d.id} battery critical - aborting reconnaissance` },
-    { condition: (d) => d.status === 'syncing', text: (d) => `${d.id} uploading reconnaissance data...` },
-    { condition: (d) => d.status === 'offline', text: (d) => `${d.id} offline - lost visual contact` },
+    { condition: (d) => d.battery < 20, text: (d) => `triggerLowBatteryWarning() - Warning ⚠ | Level: ${d.battery.toFixed(0)}%` },
+    { condition: (d) => d.battery < 10, text: (d) => `abortReconnaissance() - Critical ⚠ | Level: ${d.battery.toFixed(0)}%` },
+    { condition: (d) => d.status === 'syncing', text: (d) => `uploadReconnaissanceData() - In Progress ⟳` },
+    { condition: (d) => d.status === 'offline', text: (d) => `diagnoseVisualContactLoss() - Failed ❌` },
   ],
   charger: [
-    { condition: (d) => d.battery < 20, text: (d) => `WARNING: ${d.id} reserves at ${d.battery.toFixed(0)}% - heading to base` },
-    { condition: (d) => d.status === 'syncing', text: (d) => `${d.id} transferring power payload...` },
-    { condition: (d) => d.status === 'offline', text: (d) => `${d.id} offline - power delivery system failed` },
+    { condition: (d) => d.battery < 20, text: (d) => `triggerLowBatteryWarning() - Warning ⚠ | Level: ${d.battery.toFixed(0)}%` },
+    { condition: (d) => d.status === 'syncing', text: (d) => `transferPowerPayload() - In Progress ⟳` },
+    { condition: (d) => d.status === 'offline', text: (d) => `diagnosePowerDeliveryFailure() - Failed ❌` },
   ],
 };
 
 const MESSAGE_TEMPLATES: Record<string, string[]> = {
   command: [
-    "CMD: Proceed to grid {grid}",
-    "CMD: Initiate thermal scan sector {sector}",
-    "CMD: Return to base - low battery",
-    "CMD: Establish relay to {drone}",
-    "CMD: Activate coverage boost",
+    "cmd_proceedToGrid({grid}) - Success ✓",
+    "cmd_initiateThermalScan({sector}) - Success ✓",
+    "cmd_returnToBase() - Success ✓",
+    "cmd_establishRelay({drone}) - Success ✓",
+    "cmd_activateCoverageBoost() - Success ✓",
   ],
   status: [
-    "Status: Relay path confirmed",
-    "Status: Data transmission complete",
-    "Status: Position updated",
-    "Status: Ready for next command",
-    "Status: Connection stable",
+    "status_confirmRelayPath() - Success ✓",
+    "status_transmitData() - Success ✓",
+    "status_updatePosition() - Success ✓",
+    "status_awaitCommand() - Success ✓",
+    "status_verifyConnection() - Success ✓",
   ],
   data: [
-    "DATA: Thermal reading {temp}°C",
-    "DATA: {count} devices in range",
-    "DATA: Coverage map updated",
-    "DATA: Signal strength {signal}%",
+    "data_readThermal({temp}) - Success ✓",
+    "data_countDevices({count}) - Success ✓",
+    "data_updateCoverageMap() - Success ✓",
+    "data_measureSignalStrength({signal}) - Success ✓",
   ],
   alert: [
-    "ALERT: Low battery {battery}%",
-    "ALERT: Obstacle detected",
-    "ALERT: Connection lost - retrying",
-    "ALERT: Temperature warning",
+    "alert_lowBattery({battery}) - Warning ⚠",
+    "alert_detectObstacle() - Warning ⚠",
+    "alert_retryConnection() - In Progress ⟳",
+    "alert_temperatureWarning() - Warning ⚠",
   ],
 };
 
@@ -148,6 +148,69 @@ export function useSimulation() {
       const store = useStore.getState();
       const currentDrones = store.drones;
       const currentSOS = store.sosSignals;
+      const relayDrones = currentDrones.filter(d => d.role === 'relay' && d.status === 'online');
+
+      // Process SOS signals to create persistent connections and assign relays
+      currentSOS.forEach((sos) => {
+        // Group ID for this SOS
+        const groupId = `GROUP-${sos.id}`;
+        
+        // Ensure Relays are assigned to this SOS. 
+        // For simplicity, assign all relays to the active SOS to build a chain to base [0, 15, 0]
+        if (relayDrones.length > 0) {
+          relayDrones.forEach((relay, index) => {
+            // Position them evenly along the line between Base and SOS
+            const basePos = [0, 15, 0];
+            const ratio = (index + 1) / (relayDrones.length + 1);
+            
+            const targetX = basePos[0] + (sos.position[0] - basePos[0]) * ratio;
+            const targetZ = basePos[2] + (sos.position[2] - basePos[2]) * ratio;
+            
+            store.updateDrone(relay.id, {
+              targetPosition: [targetX, 15, targetZ]
+            });
+            
+            // Add to SOS group
+            store.joinGroup(groupId, relay.id);
+          });
+        }
+        
+        // Find other drones near the SOS to add to the group chat
+        currentDrones.forEach(d => {
+           if (d.role !== 'relay') {
+             const dx = d.position[0] - sos.position[0];
+             const dz = d.position[2] - sos.position[2];
+             const dist = Math.sqrt(dx*dx + dz*dz);
+             if (dist < 40) { // Near the SOS
+                store.joinGroup(groupId, d.id);
+             } else {
+                store.leaveGroup(groupId, d.id);
+             }
+           }
+        });
+        
+        // Establish persistent connections for the group
+        const groupMembers = store.droneGroups[groupId] || [];
+        for(let i = 0; i < groupMembers.length; i++) {
+           for(let j = i + 1; j < groupMembers.length; j++) {
+              store.setConnection(groupMembers[i], groupMembers[j], true);
+           }
+        }
+      });
+      
+      // Cleanup connections for inactive SOS signals
+      const activeSosIds = currentSOS.map(s => `GROUP-${s.id}`);
+      Object.keys(store.droneGroups).forEach(groupId => {
+         if (!activeSosIds.includes(groupId)) {
+            // Disconnect members
+            const groupMembers = store.droneGroups[groupId] || [];
+            for(let i = 0; i < groupMembers.length; i++) {
+               for(let j = i + 1; j < groupMembers.length; j++) {
+                  store.setConnection(groupMembers[i], groupMembers[j], false);
+               }
+            }
+         }
+      });
 
       // 1. Update each drone
       currentDrones.forEach((drone) => {
@@ -212,11 +275,32 @@ export function useSimulation() {
           }
         }
 
+        // Scout patrol logic
+        if (drone.role === 'scout' && drone.status === 'online') {
+          // If a scout doesn't have a target position (or is close to it), give it a new random waypoint
+          if (!drone.targetPosition || 
+              (Math.abs(drone.targetPosition[0] - drone.position[0]) < 2 && 
+               Math.abs(drone.targetPosition[2] - drone.position[2]) < 2)) {
+            
+            // Generate random waypoint within the map bounds (-80 to 80)
+            const randomX = (Math.random() - 0.5) * 160;
+            const randomZ = (Math.random() - 0.5) * 160;
+            
+            store.updateDrone(drone.id, {
+              targetPosition: [randomX, drone.position[1], randomZ]
+            });
+            
+            if (Math.random() < 0.2) {
+              store.addDroneReasoning(drone.id, `Plotting new patrol vector to [${randomX.toFixed(0)}, ${randomZ.toFixed(0)}]`, 'action');
+            }
+          }
+        }
+
         // Universal routine scan logic for all drones (Swarm lidar)
         // Different roles scan with different frequencies
         let scanChance = 0;
         if (drone.status === 'online') {
-          if (drone.role === 'scout') scanChance = 0.25; // Scouts scan very frequently
+          if (drone.role === 'scout') scanChance = 0.8; // Scouts scan almost constantly
           else scanChance = 0.08; // Other drones scan occasionally
           
           if (Math.random() < scanChance) { 
@@ -242,10 +326,11 @@ export function useSimulation() {
             
             // Only add observation reasoning if targets were found, or if it's a scout
             if (targetsDetected > 0 || drone.role === 'scout') {
-              store.addDroneReasoning(drone.id, `Routine thermal sweep completed. ${targetsDetected} signatures found.`, 'observation');
+              store.addDroneReasoning(drone.id, `executeThermalSweep() - Success ✓ | Signatures: ${targetsDetected}`, 'observation');
             }
           }
         }
+        // Charger drone logic
         if (drone.role === 'charger' && drone.status === 'online') {
           // Find drones with battery < 30%
           const lowBatteryDrones = currentDrones.filter(d => d.id !== drone.id && d.battery < 30);
@@ -267,6 +352,8 @@ export function useSimulation() {
             } else {
               // We are close enough to charge
               store.setActivePowerPath(drone.id, targetDrone.id, true);
+              const chargerId = drone.id;
+              const targetId = targetDrone.id;
               
               // Add battery to target
               store.updateDrone(targetDrone.id, {
@@ -278,7 +365,7 @@ export function useSimulation() {
               }
               
               setTimeout(() => {
-                store.setActivePowerPath(drone.id, targetDrone.id, false);
+                useStore.getState().setActivePowerPath(chargerId, targetId, false);
               }, TICK_INTERVAL - 500);
             }
           }
@@ -293,15 +380,15 @@ export function useSimulation() {
 
         // Push events for significant changes
         if (statusChanged) {
-          pushEvent(`Drone ${drone.id} status: ${drone.status} → ${newStatus}`, 'status');
+          pushEvent(`updateDroneStatus({ id: '${drone.id}', to: '${newStatus}' }) - Success ✓`, 'status');
         }
 
         if (drone.battery > 15 && newBattery <= 15) {
-          pushEvent(`Drone ${drone.id} battery critical: ${newBattery.toFixed(1)}%`, 'status');
+          pushEvent(`triggerBatteryCritical({ id: '${drone.id}', level: '${newBattery.toFixed(1)}%' }) - Warning ⚠`, 'status');
         }
 
         if (newBattery <= 0 && drone.status !== 'offline') {
-          pushEvent(`Drone ${drone.id} shutdown - battery depleted`, 'status');
+          pushEvent(`executeEmergencyShutdown({ id: '${drone.id}', reason: 'battery_depleted' }) - Success ✓`, 'status');
         }
 
         // Generate per-drone reasoning (context-aware)
@@ -363,8 +450,11 @@ export function useSimulation() {
             store.setActiveMessagePath(drone.id, targetDrone.id, true);
             
             // Deactivate shimmer after a short delay (simulating packet transmission)
+            // Need to save IDs because store closures might lose context
+            const fromId = drone.id;
+            const toId = targetDrone.id;
             setTimeout(() => {
-              store.setActiveMessagePath(drone.id, targetDrone.id, false);
+              useStore.getState().setActiveMessagePath(fromId, toId, false);
             }, 1500 + Math.random() * 1000);
             
             // Update last message time
@@ -393,17 +483,19 @@ export function useSimulation() {
             if (nearbyDrones.length > 0) {
               const targetDrone = getRandomElement(nearbyDrones);
               store.addDroneReasoning(drone.id, 
-                `Initiating swarm protocol with ${targetDrone.id} (nearby)`, 
+                `initSwarmProtocol(${targetDrone.id}) - Success ✓ | Status: nearby`, 
                 'action'
               );
               store.addDroneMessage(drone.id, targetDrone.id, 
-                `PROACTIVE: Establishing swarm sync connection...`, 
+                `status_establishSwarmSync() - In Progress ⟳`, 
                 'status'
               );
               
               store.setActiveMessagePath(drone.id, targetDrone.id, true);
+              const fId = drone.id;
+              const tId = targetDrone.id;
               setTimeout(() => {
-                store.setActiveMessagePath(drone.id, targetDrone.id, false);
+                useStore.getState().setActiveMessagePath(fId, tId, false);
               }, 2000);
               
               store.updateDrone(drone.id, { lastMessageTime: Date.now() });
@@ -428,10 +520,10 @@ export function useSimulation() {
         if (relayDrones.length > 0) {
           const randomDrone = relayDrones[Math.floor(Math.random() * relayDrones.length)];
           const messages = [
-            `Data packet relayed via ${randomDrone.id}`,
-            `Mesh network handshake: ${randomDrone.id} ↔ Base`,
-            `Signal boosted through ${randomDrone.id}`,
-            `Encrypted transmission via ${randomDrone.id} complete`,
+            `relayDataPacket() - Success ✓ | Node: ${randomDrone.id}`,
+            `executeMeshHandshake({ node: '${randomDrone.id}', target: 'Base' }) - Success ✓`,
+            `boostSignal() - Success ✓ | Node: ${randomDrone.id}`,
+            `transmitEncryptedData() - Success ✓ | Node: ${randomDrone.id}`,
           ];
           pushEvent(messages[Math.floor(Math.random() * messages.length)], 'relay');
         }
@@ -442,7 +534,7 @@ export function useSimulation() {
         const wifiDrones = currentDrones.filter(d => d.role === 'wifi' && d.status === 'online');
         if (wifiDrones.length > 0) {
           const randomDrone = wifiDrones[Math.floor(Math.random() * wifiDrones.length)];
-          pushEvent(`WiFi coverage extended by ${randomDrone.id}`, 'coverage');
+          pushEvent(`extendWiFiCoverage() - Success ✓ | Node: ${randomDrone.id}`, 'coverage');
         }
       }
 
@@ -467,12 +559,12 @@ export function useSimulation() {
           const mission = store.generateMission(missionType);
           store.startMission(mission.id);
           store.addReasoning(
-            `Auto-generated mission: ${mission.name} with ${mission.tasks.length} tasks`,
+            `generateMission({ name: '${mission.name}', tasks: ${mission.tasks.length} }) - Success ✓`,
             'action'
           );
           store.addDroneReasoning(
             currentDrones.find(d => d.role === missionType || d.role === 'relay')?.id || currentDrones[0]?.id,
-            `Mission assigned: ${mission.name}`,
+            `assignMission({ name: '${mission.name}' }) - Success ✓`,
             'action'
           );
         }
@@ -490,7 +582,7 @@ export function useSimulation() {
           } else {
             store.completeMission(store.activeMission.id);
             store.addReasoning(
-              `Mission completed: ${store.activeMission.name}`,
+              `completeMission({ name: '${store.activeMission.name}' }) - Success ✓`,
               'observation'
             );
           }

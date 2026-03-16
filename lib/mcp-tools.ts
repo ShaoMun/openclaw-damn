@@ -361,7 +361,7 @@ export const mcpTools: MCPTool[] = [
         if (drone.battery < 20) {
           store.addDroneReasoning(
             drone.id,
-            `LOW BATTERY WARNING: ${drone.battery.toFixed(0)}% - initiating return to base`,
+            `triggerLowBatteryWarning() - Warning ⚠ | Level: ${drone.battery.toFixed(0)}%`,
             "action"
           );
         }
@@ -410,7 +410,7 @@ export const mcpTools: MCPTool[] = [
 
       store.addDroneReasoning(
         drone.id,
-        `Thermal scan initiated for sector ${params.grid_area}`,
+        `initiateThermalScan({ sector: '${params.grid_area}' }) - Success ✓`,
         "action"
       );
 
@@ -441,7 +441,7 @@ export const mcpTools: MCPTool[] = [
         const targetTemp = (35 + Math.random() * 10).toFixed(1);
         store.addDroneReasoning(
           drone.id,
-          `DETECTED: ${targetsDetected} thermal signature(s) at ${targetTemp}°C`,
+          `detectThermalSignatures() - Success ✓ | Count: ${targetsDetected} | Temp: ${targetTemp}°C`,
           "observation"
         );
         store.pushEvent(
@@ -451,7 +451,7 @@ export const mcpTools: MCPTool[] = [
       } else {
         store.addDroneReasoning(
           drone.id,
-          `No thermal signatures detected in sector ${params.grid_area}`,
+          `detectThermalSignatures() - Failed ❌ | Sector: ${params.grid_area}`,
           "observation"
         );
       }
@@ -508,13 +508,13 @@ export const mcpTools: MCPTool[] = [
 
       store.addDroneReasoning(
         fromDrone.id,
-        `Sending to ${toDrone.id}: "${params.message}"`,
+        `transmitMessage({ to: '${toDrone.id}', message: '${params.message}' }) - Success ✓`,
         "action"
       );
 
       store.addDroneReasoning(
         toDrone.id,
-        `Received from ${fromDrone.id}: "${params.message}"`,
+        `receiveMessage({ from: '${fromDrone.id}', message: '${params.message}' }) - Success ✓`,
         "observation"
       );
       
