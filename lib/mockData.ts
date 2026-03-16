@@ -46,13 +46,13 @@ function gridLabel(r: number, c: number) {
 }
 
 function buildDrones(): Drone[] {
-  const roles: Drone['role'][] = ['relay', 'wifi', 'supply', 'relay', 'wifi', 'relay', 'wifi', 'supply', 'relay', 'wifi', 'relay', 'supply'];
-  const statuses: Drone['status'][] = ['online', 'online', 'online', 'offline', 'online', 'syncing', 'online', 'online', 'offline', 'online', 'online', 'syncing'];
+  const roles: Drone['role'][] = ['relay', 'wifi', 'supply', 'scout', 'charger'];
+  const statuses: Drone['status'][] = ['online', 'online', 'online', 'online', 'online'];
 
   return roles.map((role, i) => {
     const id = `DRONE-${String(i + 1).padStart(2, '0')}`;
-    const x = (rand() - 0.5) * 130;
-    const z = (rand() - 0.5) * 130;
+    const x = (rand() - 0.5) * 100;
+    const z = (rand() - 0.5) * 100;
     const y = 12 + rand() * 12;
     return {
       id,
@@ -60,6 +60,8 @@ function buildDrones(): Drone[] {
       battery: Math.round(30 + rand() * 65),
       position: [x, y, z] as [number, number, number],
       status: statuses[i],
+      proactiveLevel: 0.3 + rand() * 0.7, // 0.3-1.0: proactivity level
+      lastMessageTime: Date.now() - rand() * 60000, // Random last comm time
     };
   });
 }
@@ -74,7 +76,7 @@ function buildSOS(drones: Drone[]): SOSSignal[] {
       position: [30, 1, -20],
       timestamp: Date.now() - 120_000,
       strength: 0.85,
-      relayDroneIds: [drones[0].id, drones[3].id, drones[10].id],
+      relayDroneIds: [drones[0].id, drones[1].id],
     },
     {
       id: 'SOS-002',
@@ -82,7 +84,7 @@ function buildSOS(drones: Drone[]): SOSSignal[] {
       position: [-45, 1, 35],
       timestamp: Date.now() - 45_000,
       strength: 0.62,
-      relayDroneIds: [drones[5].id, drones[1].id],
+      relayDroneIds: [drones[2].id, drones[3].id],
     },
     {
       id: 'SOS-003',
@@ -90,7 +92,7 @@ function buildSOS(drones: Drone[]): SOSSignal[] {
       position: [10, 1, 50],
       timestamp: Date.now() - 180_000,
       strength: 0.91,
-      relayDroneIds: [drones[4].id, drones[8].id, drones[2].id],
+      relayDroneIds: [drones[0].id, drones[3].id],
     },
   ];
 }
@@ -99,15 +101,10 @@ function buildSOS(drones: Drone[]): SOSSignal[] {
 
 function buildRelayPaths(drones: Drone[], sos: SOSSignal[]): RelayPath[] {
   return sos.map((s, i) => {
-    const hops: [number, number, number][] = [s.position];
-    for (const droneId of s.relayDroneIds) {
-      const d = drones.find((dr) => dr.id === droneId);
-      if (d) hops.push(d.position);
-    }
     return {
       id: `PATH-${String(i + 1).padStart(3, '0')}`,
-      hops,
       droneIds: s.relayDroneIds,
+      sosId: s.id,
     };
   });
 }
@@ -118,13 +115,13 @@ function buildEventLog(): LogEntry[] {
   const now = Date.now();
   return [
     { id: 'evt-1', timestamp: now - 5_000, message: 'SOS detected at Grid D7', type: 'sos' },
-    { id: 'evt-2', timestamp: now - 12_000, message: 'Relay established via DRONE-04', type: 'relay' },
+    { id: 'evt-2', timestamp: now - 12_000, message: 'Relay established via DRONE-01', type: 'relay' },
     { id: 'evt-3', timestamp: now - 28_000, message: 'WiFi coverage deployed at Grid F3', type: 'coverage' },
-    { id: 'evt-4', timestamp: now - 55_000, message: 'Supply drone DRONE-08 dispatched', type: 'supply' },
-    { id: 'evt-5', timestamp: now - 90_000, message: 'DRONE-09 went offline - low battery', type: 'status' },
+    { id: 'evt-4', timestamp: now - 55_000, message: 'Supply drone DRONE-03 dispatched', type: 'supply' },
+    { id: 'evt-5', timestamp: now - 90_000, message: 'DRONE-04 went offline - low battery', type: 'status' },
     { id: 'evt-6', timestamp: now - 140_000, message: 'SOS detected at Grid K12', type: 'sos' },
-    { id: 'evt-7', timestamp: now - 200_000, message: 'DRONE-06 syncing stored messages', type: 'status' },
-    { id: 'evt-8', timestamp: now - 280_000, message: 'Coverage restored Sector 4 via DRONE-10', type: 'coverage' },
+    { id: 'evt-7', timestamp: now - 200_000, message: 'DRONE-02 syncing stored messages', type: 'status' },
+    { id: 'evt-8', timestamp: now - 280_000, message: 'Scout DRONE-04 completed area reconnaissance', type: 'coverage' },
   ];
 }
 

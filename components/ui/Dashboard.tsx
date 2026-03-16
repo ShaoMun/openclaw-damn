@@ -1,10 +1,19 @@
-'use client';
+"use client";
 
-import { BottomPanel } from './BottomPanel';
-import { RightPanel } from './RightPanel';
-import { TopPanel } from './TopPanel';
+import { TopPanel } from "./TopPanel";
+import { ReasoningPanel } from "./ReasoningPanel";
+import { RightPanel } from "./RightPanel";
+import { DroneReasoningModal } from "./DroneReasoningModal";
+import { DroneSwitchDialog } from "./DroneSwitchDialog";
+import { MessagePassingPanel } from "./MessagePassingPanel";
+import { useStore } from "@/lib/store";
 
 export function Dashboard() {
+  const selectedDroneId = useStore((s) => s.selectedDroneId);
+  const secondSelectedDroneId = useStore((s) => s.secondSelectedDroneId);
+  const switchDialogDroneId = useStore((s) => s.switchDialogDroneId);
+  const messagePassingMode = useStore((s) => s.messagePassingMode);
+
   return (
     <div className="absolute inset-0 z-10 pointer-events-none p-6 overflow-hidden">
       {/* Screen Vignette */}
@@ -23,15 +32,34 @@ export function Dashboard() {
         <TopPanel />
       </div>
 
+      {/* Left AI Commander panel */}
+      <div className="absolute top-24 left-6 bottom-6 w-72 z-20">
+        <ReasoningPanel />
+      </div>
+
       {/* Right Mission Control panel */}
-      <div className="absolute top-24 right-6 bottom-32 z-20">
+      <div className="absolute top-24 right-6 bottom-6 z-20">
         <RightPanel />
       </div>
 
-      {/* Bottom HUD section */}
-      <div className="absolute bottom-6 left-6 right-6 z-20">
-        <BottomPanel />
-      </div>
+      {/* Modal Layer */}
+      {selectedDroneId && !messagePassingMode && (
+        <DroneReasoningModal droneId={selectedDroneId} />
+      )}
+
+      {switchDialogDroneId && selectedDroneId && (
+        <DroneSwitchDialog
+          currentDroneId={selectedDroneId}
+          newDroneId={switchDialogDroneId}
+        />
+      )}
+
+      {messagePassingMode && secondSelectedDroneId && selectedDroneId && (
+        <MessagePassingPanel
+          drone1Id={selectedDroneId}
+          drone2Id={secondSelectedDroneId}
+        />
+      )}
     </div>
   );
 }

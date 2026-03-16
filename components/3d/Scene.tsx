@@ -9,6 +9,8 @@ import { GridOverlay } from './GridOverlay';
 import { SOSMarkers } from './SOSMarker';
 import { RelayPaths } from './RelayPath';
 import { CameraController } from './CameraController';
+import { DroneChatBubbles } from './DroneChatBubbles';
+import { ActiveScans } from './ActiveScans';
 import { Suspense } from 'react';
 
 export function Scene() {
@@ -34,6 +36,8 @@ export function Scene() {
             <GridOverlay />
             <SOSMarkers />
             <RelayPaths />
+            <DroneChatBubbles />
+            <ActiveScans />
           </Selection>
 
           <EffectComposer multisampling={4}>

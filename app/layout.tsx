@@ -14,7 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Disaster Drone Swarm Interface",
-  description: "Decentralized drone swarm for disaster communication restoration",
+  description:
+    "Decentralized drone swarm for disaster communication restoration",
 };
 
 export default function RootLayout({

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useMemo, useState } from 'react';
+import { useRef, useMemo, useState, useEffect } from 'react';
 import { Html } from '@react-three/drei';
 import { useFrame, useLoader } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -8,12 +8,25 @@ import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader.js';
 import { MTLLoader } from 'three/examples/jsm/loaders/MTLLoader.js';
 import { useStore, selectDrones, type Drone, type DroneRole } from '@/lib/store';
 
+// ─── Global drone position tracker for chat bubbles ─────────────────────────────
+
+export const dronePositions = new Map<string, THREE.Vector3>();
+
+function updateDronePosition(droneId: string, position: THREE.Vector3) {
+  dronePositions.set(droneId, position.clone());
+}
+
 // ─── Constants ───────────────────────────────────────────────────────────────
+
+const MOVEMENT_SPEED = 0.3;
+const TARGET_TOLERANCE = 0.5;
 
 const ROLE_LABEL: Record<DroneRole, string> = {
   relay:  'Relay',
   wifi:   'WiFi',
   supply: 'Cargo',
+  scout:  'Scout',
+  charger: 'Power',
 };
 
 const STATUS_DOT: Record<string, string> = {
@@ -86,27 +99,138 @@ function DroneModel({ status }: { role: DroneRole; status: string }) {
 
 function DroneUnit({ drone }: { drone: Drone }) {
   const groupRef = useRef<THREE.Group>(null);
+  const hoverGroupRef = useRef<THREE.Group>(null);
   const selectDrone = useStore((s) => s.selectDrone);
+  const setSwitchDialogDroneId = useStore((s) => s.setSwitchDialogDroneId);
+  const updateDrone = useStore((s) => s.updateDrone);
+  const selectedDroneId = useStore((s) => s.selectedDroneId);
   const isSelected = useStore((s) => s.selectedDroneId === drone.id);
   const [hovered, setHovered] = useState(false);
+  
+  const localPositionRef = useRef<THREE.Vector3>(
+    new THREE.Vector3(...drone.position)
+  );
+
+  // Sync local position ref with store position (from simulation hover effects)
+  useEffect(() => {
+    localPositionRef.current.set(...drone.position);
+  }, [drone.position]);
 
   useFrame(({ clock }) => {
     if (!groupRef.current) return;
     const offset = parseInt(drone.id.replace(/\D/g, ''), 10) || 0;
-    groupRef.current.position.y =
-      drone.position[1] + Math.sin(clock.elapsedTime * 1.5 + offset) * 1.2;
-    groupRef.current.rotation.y += 0.005;
+    
+    // Interpolate towards target position if set
+    if (drone.targetPosition) {
+      const target = new THREE.Vector3(...drone.targetPosition);
+      const current = localPositionRef.current;
+      const direction = new THREE.Vector3().subVectors(target, current);
+      const distance = direction.length();
+      
+      if (distance > TARGET_TOLERANCE) {
+        direction.normalize().multiplyScalar(MOVEMENT_SPEED);
+        current.add(direction);
+        groupRef.current.position.copy(current);
+      } else {
+        localPositionRef.current.copy(target);
+        groupRef.current.position.copy(target);
+        
+        // Update store with new position and clear target
+        updateDrone(drone.id, {
+          position: [target.x, target.y, target.z],
+          targetPosition: undefined,
+        });
+      }
+    } else {
+      groupRef.current.position.copy(localPositionRef.current);
+    }
+    
+    // Update global position tracker for chat bubbles
+    const worldPosition = new THREE.Vector3();
+    groupRef.current.getWorldPosition(worldPosition);
+    updateDronePosition(drone.id, worldPosition);
+    
+    // Fast Patrol logic for Relay Drones
+    let isRelayPatrol = false;
+    if (drone.role === 'relay' && drone.status === 'online') {
+        const allDrones = useStore.getState().drones;
+        const onlineDrones = allDrones.filter(d => d.status === 'online' && d.id !== drone.id);
+        if (onlineDrones.length >= 2) {
+            isRelayPatrol = true;
+            let maxDist = 0;
+            let p1 = new THREE.Vector3(), p2 = new THREE.Vector3();
+            for(let i=0; i<onlineDrones.length; i++) {
+                for(let j=i+1; j<onlineDrones.length; j++) {
+                    const d1Pos = dronePositions.get(onlineDrones[i].id) || new THREE.Vector3(...onlineDrones[i].position);
+                    const d2Pos = dronePositions.get(onlineDrones[j].id) || new THREE.Vector3(...onlineDrones[j].position);
+                    const dist = d1Pos.distanceTo(d2Pos);
+                    if(dist > maxDist) { 
+                       maxDist = dist; 
+                       p1.copy(d1Pos); 
+                       p2.copy(d2Pos); 
+                    }
+                }
+            }
+            const time = clock.elapsedTime * 1.5; // Fast Speed
+            const t = (Math.sin(time + offset) + 1) / 2;
+            const targetX = p1.x + (p2.x - p1.x) * t;
+            const targetZ = p1.z + (p2.z - p1.z) * t;
+            
+            const target = new THREE.Vector3(targetX, localPositionRef.current.y, targetZ);
+            
+            localPositionRef.current.lerp(target, 0.08);
+            groupRef.current.position.copy(localPositionRef.current);
+            
+            // Randomly sync to state to ensure UI logic catches up
+            if (Math.random() < 0.05) {
+                updateDrone(drone.id, { position: [localPositionRef.current.x, localPositionRef.current.y, localPositionRef.current.z] });
+            }
+        }
+    }
+    
+    if (!isRelayPatrol) {
+      // Interpolate towards target position if set
+      if (drone.targetPosition) {
+        const target = new THREE.Vector3(...drone.targetPosition);
+        const current = localPositionRef.current;
+        const direction = new THREE.Vector3().subVectors(target, current);
+        const distance = direction.length();
+        
+        if (distance > TARGET_TOLERANCE) {
+          direction.normalize().multiplyScalar(MOVEMENT_SPEED);
+          current.add(direction);
+          groupRef.current.position.copy(current);
+        } else {
+          localPositionRef.current.copy(target);
+          groupRef.current.position.copy(target);
+          
+          // Update store with new position and clear target
+          updateDrone(drone.id, {
+            position: [target.x, target.y, target.z],
+            targetPosition: undefined,
+          });
+        }
+      } else {
+        groupRef.current.position.copy(localPositionRef.current);
+      }
+    }
   });
 
   const handleClick = (e: any) => {
     e.stopPropagation();
-    selectDrone(isSelected ? null : drone.id);
+    
+    if (selectedDroneId === null) {
+      selectDrone(drone.id);
+    } else if (selectedDroneId === drone.id) {
+      selectDrone(null);
+    } else {
+      setSwitchDialogDroneId(drone.id);
+    }
   };
 
   return (
     <group
       ref={groupRef}
-      position={drone.position}
       onClick={handleClick}
       onPointerOver={(e) => {
         e.stopPropagation();
@@ -118,43 +242,42 @@ function DroneUnit({ drone }: { drone: Drone }) {
         document.body.style.cursor = 'default';
       }}
     >
-      <DroneModel role={drone.role} status={drone.status} />
+      <group ref={hoverGroupRef}>
+        <DroneModel role={drone.role} status={drone.status} />
 
-      {/* Selection Glow */}
-      {isSelected && (
-        <group>
-          <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]}>
-            <ringGeometry args={[5, 5.5, 64]} />
-            <meshBasicMaterial color="#ffffff" transparent opacity={0.8} />
-          </mesh>
-          <pointLight color="#ffffff" intensity={3} distance={20} />
-        </group>
-      )}
+        {/* Selection Glow */}
+        {isSelected && (
+          <group>
+            <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -2, 0]}>
+              <ringGeometry args={[5, 5.5, 64]} />
+              <meshBasicMaterial color="#ffffff" transparent opacity={0.8} />
+            </mesh>
+            <pointLight color="#ffffff" intensity={3} distance={20} />
+          </group>
+        )}
 
-
-      {/* Label (Black on White HUD feel) */}
-      <Html center position={[0, 8, 0]} distanceFactor={20} zIndexRange={[0, 0]}>
-        <div
-          className="pointer-events-none flex items-center gap-2 whitespace-nowrap px-3 py-1 rounded-sm font-mono border backdrop-blur-md shadow-xl transition-all duration-300"
-          style={{
-            fontSize: 10,
-            borderColor: 'rgba(255, 255, 255, 0.2)',
-            backgroundColor: 'rgba(255, 255, 255, 0.05)',
-            color: '#ffffff',
-            opacity: isSelected || hovered ? 1 : 0.5,
-            transform: isSelected || hovered ? 'scale(1.3)' : 'scale(1)',
-          }}
-        >
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[drone.status]}`} />
-              <span className="font-bold">{drone.id}</span>
-              <span className="opacity-30">/</span>
-              <span className="opacity-80 uppercase tracking-tighter">{ROLE_LABEL[drone.role]}</span>
+        {/* Label (Black on White HUD feel) */}
+        <Html center position={[0, 6, 0]} zIndexRange={[0, 0]}>
+          <div
+            className="pointer-events-none flex items-center gap-2 whitespace-nowrap px-2.5 py-1 rounded-sm font-mono border shadow-xl transition-all duration-300"
+            style={{
+              borderColor: 'rgba(255, 255, 255, 0.1)',
+              backgroundColor: 'rgba(0, 0, 0, 0.4)',
+              color: '#ffffff',
+              opacity: isSelected || hovered ? 1 : 0.6,
+              transform: isSelected || hovered ? 'scale(1.15)' : 'scale(1)',
+              backdropFilter: 'blur(4px)',
+            }}
+          >
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5">
+                <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[drone.status]}`} />
+                <span className="text-[10px] opacity-90 uppercase tracking-wider font-bold">{ROLE_LABEL[drone.role]}</span>
+              </div>
             </div>
           </div>
-        </div>
-      </Html>
+        </Html>
+      </group>
     </group>
   );
 }

@@ -1,20 +1,28 @@
-import { useMemo, useRef, useState } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { Html } from '@react-three/drei';
-import * as THREE from 'three';
-import { useStore, selectGrid, type CellState } from '@/lib/store';
+import { useMemo, useRef, useState } from "react";
+import { useFrame } from "@react-three/fiber";
+import { Html } from "@react-three/drei";
+import * as THREE from "three";
+import { useStore, selectGrid, type CellState } from "@/lib/store";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const STATE_COLOR: Record<CellState, THREE.Color> = {
-  connected: new THREE.Color('#ffffff'),
-  dead:      new THREE.Color('#333333'),
-  covered:   new THREE.Color('#cccccc'),
-  sos:       new THREE.Color('#ffffff'),
+  connected: new THREE.Color("#ffffff"),
+  dead: new THREE.Color("#333333"),
+  covered: new THREE.Color("#cccccc"),
+  sos: new THREE.Color("#ffffff"),
 };
 
-const TILE_SIZE = 9.2;  // distinct gaps
+const TILE_SIZE = 9.2;
 const TILE_HEIGHT = 0.2;
+
+// ─── Helper to convert row/col to grid label (e.g., A1, B2, etc.) ────────────
+
+function getGridLabel(row: number, col: number): string {
+  const colLetter = String.fromCharCode(65 + col); // A, B, C, ...
+  const rowNumber = row + 1; // 1, 2, 3, ...
+  return `${colLetter}${rowNumber}`;
+}
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -32,7 +40,9 @@ export function GridOverlay() {
 
     gridCells.forEach((cell) => {
       const dist = Math.sqrt(cell.x * cell.x + cell.y * cell.y);
-      let fade = 1.0 - Math.max(0, Math.min(1, (dist - fadeStart) / (fadeEnd - fadeStart)));
+      let fade =
+        1.0 -
+        Math.max(0, Math.min(1, (dist - fadeStart) / (fadeEnd - fadeStart)));
       // Square the fade for a smoother, steeper drop-off
       fade = fade * fade;
 
@@ -57,7 +67,8 @@ export function GridOverlay() {
     });
 
     meshRef.current.instanceMatrix.needsUpdate = true;
-    if (meshRef.current.instanceColor) meshRef.current.instanceColor.needsUpdate = true;
+    if (meshRef.current.instanceColor)
+      meshRef.current.instanceColor.needsUpdate = true;
   }, [gridCells, baseColors]);
 
   // Gentle pulse for specific states
@@ -69,11 +80,11 @@ export function GridOverlay() {
     const tmpColor = new THREE.Color();
 
     gridCells.forEach((cell, i) => {
-      if (cell.state === 'sos' || cell.state === 'dead' || i === hoveredIdx) {
+      if (cell.state === "sos" || cell.state === "dead" || i === hoveredIdx) {
         let factor = 1.0;
-        if (cell.state === 'sos') factor = 1.0 + pulse;
-        else if (cell.state === 'dead') factor = 0.6 + pulse * 0.4;
-        
+        if (cell.state === "sos") factor = 1.0 + pulse;
+        else if (cell.state === "dead") factor = 0.6 + pulse * 0.4;
+
         // Boost color if hovered
         if (i === hoveredIdx) factor *= 1.5;
 
@@ -84,7 +95,8 @@ export function GridOverlay() {
       }
     });
 
-    if (meshRef.current.instanceColor) meshRef.current.instanceColor.needsUpdate = true;
+    if (meshRef.current.instanceColor)
+      meshRef.current.instanceColor.needsUpdate = true;
   });
 
   if (!showGrid) return null;
@@ -103,9 +115,9 @@ export function GridOverlay() {
         onPointerOut={() => setHoveredIdx(null)}
       >
         <boxGeometry args={[1, 1, 1]} />
-        <meshStandardMaterial 
-          transparent 
-          opacity={0.15} 
+        <meshStandardMaterial
+          transparent
+          opacity={0.15}
           emissiveIntensity={2}
           metalness={0.8}
           roughness={0.2}
@@ -113,17 +125,19 @@ export function GridOverlay() {
       </instancedMesh>
 
       {hoveredCell && (
-        <Html 
-          position={[hoveredCell.x, -2, hoveredCell.y]} 
-          center 
+        <Html
+          position={[hoveredCell.x, -2, hoveredCell.y]}
+          center
           distanceFactor={15}
           pointerEvents="none"
         >
           <div className="flex flex-col items-center gap-1 transition-all duration-300 transform scale-125">
             <div className="bg-black/60 backdrop-blur-md border border-white/20 px-2 py-1 rounded-sm shadow-2xl">
-              <div className="text-[7px] font-mono text-white/40 uppercase tracking-widest leading-none mb-0.5">Sector Info</div>
+              <div className="text-[7px] font-mono text-white/40 uppercase tracking-widest leading-none mb-0.5">
+                Sector Info
+              </div>
               <div className="text-[10px] font-mono font-bold text-white whitespace-nowrap">
-                LOC_{hoveredCell.x.toFixed(0)}_{hoveredCell.y.toFixed(0)} | {hoveredCell.state.toUpperCase()}
+                {`Grid: ${getGridLabel(hoveredCell.row, hoveredCell.col)} | ${hoveredCell.state.toUpperCase()}`}
               </div>
             </div>
             <div className="w-[1px] h-4 bg-gradient-to-b from-white/40 to-transparent" />

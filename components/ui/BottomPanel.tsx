@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { Activity, ShieldAlert, ShieldCheck, Terminal } from 'lucide-react';
-import { useStore, selectDrones, selectSOS, selectGrid } from '@/lib/store';
-import { EventLog } from './EventLog';
+import { Activity, ShieldAlert, ShieldCheck } from "lucide-react";
+import { useStore, selectDrones, selectGrid } from "@/lib/store";
 
 export function BottomPanel() {
   const drones = useStore(selectDrones);
-  const sos = useStore(selectSOS);
   const grid = useStore(selectGrid);
 
-  const safeZones = grid.filter((c) => c.state === 'connected' || c.state === 'covered').length;
-  const deadZones = grid.filter((c) => c.state === 'dead').length;
-  const syncingCount = drones.filter((d) => d.status === 'syncing').length;
+  const safeZones = grid.filter(
+    (c) => c.state === "connected" || c.state === "covered",
+  ).length;
+  const deadZones = grid.filter((c) => c.state === "dead").length;
+  const syncingCount = drones.filter((d) => d.status === "syncing").length;
 
   return (
     <div className="w-full flex gap-4 pointer-events-auto">
@@ -19,17 +19,12 @@ export function BottomPanel() {
       <div className="flex-1 bg-black/40 backdrop-blur-md border border-white/10 p-5 rounded-sm flex justify-between items-center">
         {/* Status indicator */}
         <div className="flex flex-col gap-2.5">
-          {sos.length > 0 ? (
-            <div className="flex items-center gap-2.5 text-[10px] font-mono text-white bg-white/10 border border-white/20 px-4 py-2 rounded-sm w-fit font-bold">
-              <ShieldAlert className="w-4 h-4 animate-pulse" />
-              <span className="uppercase tracking-[0.2em]">Manual Intervention Required</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-2.5 text-[10px] font-mono text-white/40 bg-white/5 border border-white/10 px-4 py-2 rounded-sm w-fit font-bold">
-              <ShieldCheck className="w-4 h-4" />
-              <span className="uppercase tracking-[0.2em]">Swarm Operating</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2.5 text-[10px] font-mono text-white/40 bg-white/5 border border-white/10 px-4 py-2 rounded-sm w-fit font-bold">
+            <ShieldCheck className="w-4 h-4" />
+            <span className="uppercase tracking-[0.2em]">
+              Swarm Operating
+            </span>
+          </div>
           <div className="flex items-center gap-3">
             <span className="text-[10px] font-mono text-white/30 uppercase tracking-[0.1em]">
               Status: <span className="text-white">ACTIVE</span>
@@ -43,13 +38,10 @@ export function BottomPanel() {
 
         {/* Center Heartbeat */}
         <div className="flex flex-col items-center gap-2">
-          <div className={`flex items-center justify-center w-14 h-14 rounded-full border transition-colors relative ${
-            sos.length > 0 ? 'border-white/30 bg-white/5' : 'border-white/10 bg-white/5'
-          }`}>
-            <Activity className={`w-6 h-6 ${sos.length > 0 ? 'text-white animate-pulse' : 'text-white/20'}`} />
-            {sos.length > 0 && (
-              <div className="absolute inset-0 rounded-full border border-white/50 animate-ping opacity-20" />
-            )}
+          <div
+            className="flex items-center justify-center w-14 h-14 rounded-full border border-white/10 bg-white/5 transition-colors relative"
+          >
+            <Activity className="w-6 h-6 text-white/20" />
           </div>
         </div>
 
@@ -57,36 +49,37 @@ export function BottomPanel() {
         <div className="flex gap-10">
           <div className="flex flex-col items-end">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[9px] font-mono text-white/30 uppercase">Secure</span>
-              <ShieldCheck className="w-3.5 h-3.5 text-white/60" />
+              <span className="text-[9px] font-mono text-white/30 uppercase">
+                Secure
+              </span>
+              <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-mono text-white font-bold leading-none">{safeZones}</span>
-              <span className="text-[9px] font-mono text-white/20 uppercase tracking-widest">Zones</span>
+              <span className="text-2xl font-mono text-white font-bold leading-none">
+                {safeZones}
+              </span>
+              <span className="text-[9px] font-mono text-white/20 uppercase tracking-widest">
+                Zones
+              </span>
             </div>
           </div>
 
           <div className="flex flex-col items-end">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[9px] font-mono text-white/30 uppercase">Isolated</span>
-              <ShieldAlert className="w-3.5 h-3.5 text-white animate-pulse" />
+              <span className="text-[9px] font-mono text-white/30 uppercase">
+                Isolated
+              </span>
+              <ShieldAlert className="w-3.5 h-3.5 text-white/20" />
             </div>
             <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-mono text-white font-bold leading-none">{deadZones}</span>
-              <span className="text-[9px] font-mono text-white/20 uppercase tracking-widest">Zones</span>
+              <span className="text-2xl font-mono font-bold leading-none text-white">
+                {deadZones}
+              </span>
+              <span className="text-[9px] font-mono text-white/20 uppercase tracking-widest">
+                Zones
+              </span>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Right HUD: Event Log */}
-      <div className="w-[420px] bg-black/40 backdrop-blur-md border border-white/10 rounded-sm overflow-hidden flex flex-col">
-        <div className="flex items-center gap-2 px-4 py-2.5 border-b border-white/5">
-          <Terminal className="w-3 h-3 text-white/40" />
-          <span className="text-[10px] font-mono text-white/50 uppercase tracking-[0.2em] font-bold">Encrypted Mission Log</span>
-        </div>
-        <div className="flex-1 min-h-0 h-32">
-          <EventLog />
         </div>
       </div>
     </div>
