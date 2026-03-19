@@ -179,16 +179,16 @@ const TerrainScansMaterial = shaderMaterial(
       // Sweep angle
       float sweepAngle = mod(-elapsed * 4.0, 6.28318) - 3.14159;
       float diff = mod(angle - sweepAngle + 6.28318, 6.28318);
-      float beam = exp(-diff * 3.0);
+      float beam = exp(-diff * 6.0);
 
       float noiseVal = noise(vPosition.xy * 0.05 + elapsed * 0.5) * 0.5 + 0.5;
       float heat = mix(0.0, 0.8, noiseVal);
       heat += sin(dist * 0.15 - elapsed * 2.0) * 0.15;
 
       vec3 color = getThermalColor(heat);
-      color += vec3(0.5, 0.8, 1.0) * smoothstep(0.0, 0.05, diff) * (1.0 - smoothstep(0.05, 0.1, diff)); // Cyan/Blue hot beam edge
+      color += vec3(0.5, 0.8, 1.0) * smoothstep(0.0, 0.02, diff) * (1.0 - smoothstep(0.02, 0.04, diff)); // Cyan/Blue hot beam edge
 
-      float alpha = 1.0 - smoothstep(radius * 0.8, radius, dist);
+      float alpha = 1.0 - smoothstep(radius * 0.95, radius, dist);
       alpha *= max(beam, 0.4) * fade;
 
       totalColor += color * alpha;
@@ -198,9 +198,9 @@ const TerrainScansMaterial = shaderMaterial(
     if (totalAlpha <= 0.0) discard;
     
     // Keep colors raw and bright without muddying them
-    totalColor = clamp(totalColor * 1.5, 0.0, 1.0); // Simple brightness boost keeping pure colors
+    totalColor = clamp(totalColor * 3.0, 0.0, 2.0);
 
-    gl_FragColor = vec4(totalColor, clamp(totalAlpha, 0.0, 0.9));
+    gl_FragColor = vec4(totalColor, clamp(totalAlpha, 0.0, 1.0));
   }
   `
 );
