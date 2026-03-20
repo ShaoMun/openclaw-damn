@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { useStore, type DroneReasoningEntry, type Drone } from '@/lib/store';
 import { Brain, Zap, Eye, X, Battery, MapPin, Radio, Wifi, Package, Search, BatteryCharging } from 'lucide-react';
+import { LocalAIStats } from './LocalAIStats';
 
 const ROLE_ICONS: Record<string, React.ReactNode> = {
   relay: <Radio className="w-3 h-3" />,
@@ -145,6 +146,9 @@ export function DroneReasoningModal({ droneId }: DroneReasoningModalProps) {
             <span className="text-[8px] font-mono uppercase">{drone.status}</span>
           </div>
         </div>
+
+        {/* Local AI Stats */}
+        <LocalAIStats droneId={droneId} />
 
         {/* Active Mission (if any) */}
         {activeMission && (

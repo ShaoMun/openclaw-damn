@@ -2,7 +2,7 @@ import { create } from "zustand";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
-export type DroneRole = "relay" | "wifi" | "supply" | "scout" | "charger";
+export type DroneRole = "relay" | "supply" | "scout" | "medical" | "rescue" | "comms" | "fire" | "charger" | "heavy" | "recon" | "evac" | "transport" | "repair";
 export type DroneStatus = "online" | "offline" | "syncing";
 export type CellState = "connected" | "dead" | "covered" | "sos";
 export type EventType = "sos" | "relay" | "coverage" | "supply" | "status";
@@ -17,6 +17,7 @@ export interface Drone {
   status: DroneStatus;
   lastMessageTime?: number; // Track when drone last sent/received message
   proactiveLevel?: number; // 0-1: How proactive this drone is (0 = passive, 1 = very proactive)
+  localAI?: DroneLocalAI; // Feature 3: Local AI system
 }
 
 export interface GridCell {
@@ -103,6 +104,124 @@ export interface ActiveScan {
   duration: number; // in ms
   startTime: number;
   targets: {x: number, z: number, isHuman: boolean}[]; // Local offsets or global positions for red spots
+  intensity?: number; // 0.0 to 1.0 - opacity of scan (default 1.0)
+}
+
+export interface ClickMarker {
+  id: string;
+  position: [number, number, number];
+  timestamp: number;
+  isHuman: boolean;
+  discovered: boolean;
+}
+
+// ─── Feature 1: Grid Coverage Stats ────────────────────────────────────
+
+export interface GridCoverageStats {
+  searchCoverage: number;      // % of cells scanned
+  wifiCoverage: number;         // % of area with WiFi
+  totalCells: number;
+  coveredCells: number;
+  deadZones: number;
+  sosZones: number;
+}
+
+// ─── Feature 3: Local AI ───────────────────────────────────────────────
+
+export type DronePersonality = "aggressive" | "cautious" | "balanced" | "efficiency";
+
+export interface DroneLocalAI {
+  droneId: string;
+  enabled: boolean;
+  personality: DronePersonality;
+  stats: {
+    peopleFound: number;
+    peopleFoundPerMinute: number;
+    scansCompleted: number;
+    distanceTraveled: number;
+    efficiency: number;        // actions completed / energy used
+    uptime: number;            // milliseconds online
+  };
+  currentGoal: string;
+  lastScanTime: number;
+}
+
+export interface DroneLocalReasoningEntry {
+  id: string;
+  droneId: string;
+  timestamp: number;
+  thought: string;
+  action: string;
+  outcome: "success" | "partial" | "failed";
+  duration: number;  // milliseconds to execute
+}
+
+// ─── Feature 2: Tree of Thought ───────────────────────────────────────
+
+export type ThoughtNodeType = "root" | "branch" | "leaf" | "observation";
+
+export interface ThoughtNode {
+  id: string;
+  parentId: string | null;
+  timestamp: number;
+  text: string;
+  type: ThoughtNodeType;
+  confidence: number;        // 0-100
+  status: "pending" | "active" | "completed" | "discarded";
+  children: string[];        // IDs of child nodes
+  dependencies: string[];    // IDs of prerequisite nodes
+  metadata: {
+    toolCalls?: string[];
+    droneIds?: string[];
+    gridArea?: string;
+  };
+}
+
+// ─── Feature 4: ZKML Proof ────────────────────────────────────────────
+
+export interface ZKMLProof {
+  id: string;
+  timestamp: number;
+  reasoningHash: string;      // SHA-256 of reasoning text
+  modelHash: string;          // Mock model identifier
+  arbitrumTxHash: string;     // Hardcoded transaction hash
+  verificationUrl: string;    // Arbitrum explorer URL
+  verified: boolean;
+  proofData: {
+    inputCommitment: string;
+    outputCommitment: string;
+    proof: string;            // Mock zk-SNARK proof
+    publicInputs: string[];
+  };
+}
+
+// ─── Feature 5: Story Mission ───────────────────────────────────────
+
+export type MissionPhase = "briefing" | "deployment" | "search" | "rescue" | "complete" | "failed";
+
+export interface StoryMilestone {
+  id: string;
+  name: string;
+  achieved: boolean;
+  timestamp?: number;
+}
+
+export interface StoryNarrative {
+  title: string;
+  description: string;
+  objectives: string[];
+  progress: number;  // 0-100
+}
+
+export interface StoryMission {
+  id: string;
+  name: string;
+  phase: MissionPhase;
+  startTime: number;
+  endTime?: number;
+  narrative: StoryNarrative;
+  milestones: StoryMilestone[];
+  mission: Mission;  // Link to existing Mission
 }
 
 // ─── UI State ────────────────────────────────────────────────────────────────
@@ -125,11 +244,37 @@ export interface UIState {
   activeMission: Mission | null;
   missionHistory: Mission[];
   activeScans: ActiveScan[];
+  clickMarkers: ClickMarker[]; // Click investigation markers
   activeMessagePaths: Set<string>; // Set of drone ID pairs currently communicating
   activePowerPaths: Set<string>; // Set of drone ID pairs currently charging
   establishedConnections: Set<string>; // Persistent connections (P2P or group)
   droneGroups: Record<string, string[]>; // groupId -> array of droneIds
   activeGroupId: string | null;
+
+  // Feature 1: 2D Grid Map
+  gridCoverageStats: GridCoverageStats;
+  show2DGridMap: boolean;
+
+  // Feature 2: Tree of Thought
+  thoughtTree: ThoughtNode[];
+  activeThoughtId: string | null;
+  treeViewMode: "tree" | "timeline";
+
+  // Feature 3: Local AI
+  showLocalAIStats: boolean;
+  selectedDroneForLocalAI: string | null;
+  localAIReasoning: Record<string, DroneLocalReasoningEntry[]>;
+
+  // Feature 4: ZKML
+  zkmlProofs: ZKMLProof[];
+  showZKMLVerification: boolean;
+  selectedProofId: string | null;
+
+  // Feature 5: Story Mission
+  activeStoryMission: StoryMission | null;
+  storyMissionHistory: StoryMission[];
+  showStoryPanel: boolean;
+  autoProgressStory: boolean;
 }
 
 // ─── Store ───────────────────────────────────────────────────────────────────
@@ -203,6 +348,45 @@ interface AppStore extends UIState {
   joinGroup: (groupId: string, droneId: string) => void;
   leaveGroup: (groupId: string, droneId: string) => void;
   openGroupChat: (groupId: string | null) => void;
+
+  // Feature 1: 2D Grid Map actions
+  calculateGridCoverage: () => GridCoverageStats;
+  toggle2DGridMap: () => void;
+  updateGridCoverageStats: (stats: Partial<GridCoverageStats>) => void;
+
+  // Feature 2: Tree of Thought actions
+  addThoughtNode: (node: Omit<ThoughtNode, "id" | "timestamp">) => void;
+  updateThoughtNode: (id: string, patch: Partial<ThoughtNode>) => void;
+  setActiveThought: (id: string | null) => void;
+  pruneThoughtBranch: (nodeId: string) => void;
+  clearThoughtTree: () => void;
+  setTreeViewMode: (mode: "tree" | "timeline") => void;
+
+  // Feature 3: Local AI actions
+  initializeDroneLocalAI: (droneId: string, personality?: DronePersonality) => void;
+  updateDroneLocalAI: (droneId: string, patch: Partial<DroneLocalAI>) => void;
+  toggleDroneLocalAI: (droneId: string) => void;
+  addDroneLocalReasoning: (entry: Omit<DroneLocalReasoningEntry, "id" | "timestamp">) => void;
+  clearDroneLocalReasoning: (droneId: string) => void;
+
+  // Feature 4: ZKML actions
+  addZKMLProof: (proof: Omit<ZKMLProof, "id">) => void;
+  removeZKMLProof: (proofId: string) => void;
+  toggleZKMLVerification: () => void;
+  setSelectedProof: (proofId: string | null) => void;
+
+  // Feature 5: Story Mission actions
+  startStoryMission: (mission: StoryMission) => void;
+  advanceStoryPhase: (newPhase: MissionPhase) => void;
+  updateStoryNarrative: (narrative: Partial<StoryNarrative>) => void;
+  achieveStoryMilestone: (milestoneId: string) => void;
+  toggleStoryPanel: () => void;
+  completeStoryMission: () => void;
+
+  // Click marker actions
+  addClickMarker: (marker: Omit<ClickMarker, "id">) => void;
+  removeClickMarker: (markerId: string) => void;
+  updateClickMarker: (markerId: string, patch: Partial<ClickMarker>) => void;
 }
 
 export const useStore = create<AppStore>((set) => ({
@@ -231,11 +415,44 @@ export const useStore = create<AppStore>((set) => ({
   activeMission: null,
   missionHistory: [],
   activeScans: [],
+  clickMarkers: [],
   activeMessagePaths: new Set(),
   activePowerPaths: new Set(),
   establishedConnections: new Set(),
   droneGroups: {},
   activeGroupId: null,
+
+  // Feature 1: 2D Grid Map defaults
+  gridCoverageStats: {
+    searchCoverage: 0,
+    wifiCoverage: 0,
+    totalCells: 256,
+    coveredCells: 0,
+    deadZones: 0,
+    sosZones: 0,
+  },
+  show2DGridMap: false,
+
+  // Feature 2: Tree of Thought defaults
+  thoughtTree: [],
+  activeThoughtId: null,
+  treeViewMode: "timeline",
+
+  // Feature 3: Local AI defaults
+  showLocalAIStats: false,
+  selectedDroneForLocalAI: null,
+  localAIReasoning: {},
+
+  // Feature 4: ZKML defaults
+  zkmlProofs: [],
+  showZKMLVerification: false,
+  selectedProofId: null,
+
+  // Feature 5: Story Mission defaults
+  activeStoryMission: null,
+  storyMissionHistory: [],
+  showStoryPanel: false,
+  autoProgressStory: true,
 
   // Data actions
   hydrate: (data) => set(data),
@@ -527,6 +744,7 @@ export const useStore = create<AppStore>((set) => ({
           ...scan,
           id: `scan-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
           startTime: Date.now(),
+          intensity: scan.intensity ?? 1.0, // Default to full opacity
         },
       ],
     })),
@@ -534,6 +752,31 @@ export const useStore = create<AppStore>((set) => ({
   removeActiveScan: (id) =>
     set((s) => ({
       activeScans: s.activeScans.filter((scan) => scan.id !== id),
+    })),
+
+  // Click markers
+  addClickMarker: (marker) =>
+    set((s) => ({
+      clickMarkers: [
+        ...s.clickMarkers,
+        {
+          ...marker,
+          id: `marker-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          timestamp: Date.now(),
+        },
+      ],
+    })),
+
+  removeClickMarker: (id) =>
+    set((s) => ({
+      clickMarkers: s.clickMarkers.filter((m) => m.id !== id),
+    })),
+
+  updateClickMarker: (id, patch) =>
+    set((s) => ({
+      clickMarkers: s.clickMarkers.map((m) =>
+        m.id === id ? { ...m, ...patch } : m
+      ),
     })),
 
   // Active communication
@@ -606,6 +849,276 @@ export const useStore = create<AppStore>((set) => ({
     }),
     
   openGroupChat: (groupId) => set({ activeGroupId: groupId }),
+
+  // ─── Feature 1: 2D Grid Map Actions ─────────────────────────────────────
+
+  calculateGridCoverage: () => {
+    const state = useStore.getState();
+    const { gridCells, drones } = state;
+
+    // Calculate search coverage (cells not in 'dead' state)
+    const coveredCells = gridCells.filter(c => c.state !== 'dead').length;
+    const deadZones = gridCells.filter(c => c.state === 'dead').length;
+    const sosZones = gridCells.filter(c => c.state === 'sos').length;
+    const totalCells = gridCells.length;
+    const searchCoverage = totalCells > 0 ? (coveredCells / totalCells) * 100 : 0;
+
+    // Calculate WiFi coverage (cells within 45 units of WiFi drones)
+    const wifiDrones = drones.filter(d => d.role === 'wifi' && d.status === 'online');
+    let wifiCoveredCells = 0;
+
+    gridCells.forEach(cell => {
+      const isCovered = wifiDrones.some(drone => {
+        const distance = Math.sqrt(
+          Math.pow(cell.x - drone.position[0], 2) +
+          Math.pow(cell.y - drone.position[2], 2)
+        );
+        return distance <= 45; // WiFi coverage radius
+      });
+      if (isCovered) wifiCoveredCells++;
+    });
+
+    const wifiCoverage = totalCells > 0 ? (wifiCoveredCells / totalCells) * 100 : 0;
+
+    const stats: GridCoverageStats = {
+      searchCoverage,
+      wifiCoverage,
+      totalCells,
+      coveredCells,
+      deadZones,
+      sosZones,
+    };
+
+    set({ gridCoverageStats: stats });
+    return stats;
+  },
+
+  toggle2DGridMap: () => set((s) => ({ show2DGridMap: !s.show2DGridMap })),
+
+  updateGridCoverageStats: (patch) =>
+    set((s) => ({
+      gridCoverageStats: { ...s.gridCoverageStats, ...patch },
+    })),
+
+  // ─── Feature 2: Tree of Thought Actions ─────────────────────────────────
+
+  addThoughtNode: (node) =>
+    set((s) => {
+      const newNode: ThoughtNode = {
+        ...node,
+        id: `thought-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        timestamp: Date.now(),
+      };
+
+      // If this node has a parent, add it to the parent's children
+      const updatedTree = node.parentId
+        ? s.thoughtTree.map((n) =>
+            n.id === node.parentId
+              ? { ...n, children: [...n.children, newNode.id] }
+              : n
+          )
+        : s.thoughtTree;
+
+      return {
+        thoughtTree: [...updatedTree, newNode],
+        activeThoughtId: newNode.id,
+      };
+    }),
+
+  updateThoughtNode: (id, patch) =>
+    set((s) => ({
+      thoughtTree: s.thoughtTree.map((n) => (n.id === id ? { ...n, ...patch } : n)),
+    })),
+
+  setActiveThought: (id) => set({ activeThoughtId: id }),
+
+  pruneThoughtBranch: (nodeId) =>
+    set((s) => {
+      const toRemove = new Set([nodeId]);
+
+      // Recursively find all descendants
+      const findDescendants = (parentId: string) => {
+        const node = s.thoughtTree.find((n) => n.id === parentId);
+        if (node) {
+          node.children.forEach((childId) => {
+            toRemove.add(childId);
+            findDescendants(childId);
+          });
+        }
+      };
+      findDescendants(nodeId);
+
+      // Remove nodes and update parent's children
+      return {
+        thoughtTree: s.thoughtTree.filter((n) => !toRemove.has(n.id)),
+      };
+    }),
+
+  clearThoughtTree: () => set({ thoughtTree: [], activeThoughtId: null }),
+
+  setTreeViewMode: (mode) => set({ treeViewMode: mode }),
+
+  // ─── Feature 3: Local AI Actions ───────────────────────────────────────
+
+  initializeDroneLocalAI: (droneId, personality = "balanced") =>
+    set((s) => {
+      const localAI: DroneLocalAI = {
+        droneId,
+        enabled: true,
+        personality,
+        stats: {
+          peopleFound: 0,
+          peopleFoundPerMinute: 0,
+          scansCompleted: 0,
+          distanceTraveled: 0,
+          efficiency: 100,
+          uptime: 0,
+        },
+        currentGoal: "Initializing...",
+        lastScanTime: Date.now(),
+      };
+
+      return {
+        drones: s.drones.map((d) =>
+          d.id === droneId ? { ...d, localAI } : d
+        ),
+      };
+    }),
+
+  updateDroneLocalAI: (droneId, patch) =>
+    set((s) => ({
+      drones: s.drones.map((d) =>
+        d.id === droneId && d.localAI
+          ? { ...d, localAI: { ...d.localAI, ...patch } }
+          : d
+      ),
+    })),
+
+  toggleDroneLocalAI: (droneId) =>
+    set((s) => ({
+      drones: s.drones.map((d) =>
+        d.id === droneId && d.localAI
+          ? { ...d, localAI: { ...d.localAI, enabled: !d.localAI.enabled } }
+          : d
+      ),
+    })),
+
+  addDroneLocalReasoning: (entry) =>
+    set((s) => ({
+      localAIReasoning: {
+        ...s.localAIReasoning,
+        [entry.droneId]: [
+          {
+            ...entry,
+            id: `local-reason-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            timestamp: Date.now(),
+          },
+          ...(s.localAIReasoning[entry.droneId] || []),
+        ].slice(0, 50),
+      },
+    })),
+
+  clearDroneLocalReasoning: (droneId) =>
+    set((s) => ({
+      localAIReasoning: {
+        ...s.localAIReasoning,
+        [droneId]: [],
+      },
+    })),
+
+  // ─── Feature 4: ZKML Actions ──────────────────────────────────────────
+
+  addZKMLProof: (proof) =>
+    set((s) => ({
+      zkmlProofs: [
+        {
+          ...proof,
+          id: `proof-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        },
+        ...s.zkmlProofs,
+      ].slice(0, 10),
+    })),
+
+  removeZKMLProof: (proofId) =>
+    set((s) => ({
+      zkmlProofs: s.zkmlProofs.filter((p) => p.id !== proofId),
+    })),
+
+  toggleZKMLVerification: () =>
+    set((s) => ({ showZKMLVerification: !s.showZKMLVerification })),
+
+  setSelectedProof: (proofId) => set({ selectedProofId: proofId }),
+
+  // ─── Feature 5: Story Mission Actions ──────────────────────────────────
+
+  startStoryMission: (mission) =>
+    set((s) => ({
+      activeStoryMission: mission,
+      showStoryPanel: true,
+    })),
+
+  advanceStoryPhase: (newPhase) =>
+    set((s) => {
+      if (!s.activeStoryMission) return s;
+
+      return {
+        activeStoryMission: {
+          ...s.activeStoryMission,
+          phase: newPhase,
+          endTime: newPhase === 'complete' || newPhase === 'failed' ? Date.now() : undefined,
+        },
+      };
+    }),
+
+  updateStoryNarrative: (narrative) =>
+    set((s) => {
+      if (!s.activeStoryMission) return s;
+
+      return {
+        activeStoryMission: {
+          ...s.activeStoryMission,
+          narrative: {
+            ...s.activeStoryMission.narrative,
+            ...narrative,
+          },
+        },
+      };
+    }),
+
+  achieveStoryMilestone: (milestoneId) =>
+    set((s) => {
+      if (!s.activeStoryMission) return s;
+
+      return {
+        activeStoryMission: {
+          ...s.activeStoryMission,
+          milestones: s.activeStoryMission.milestones.map((m) =>
+            m.id === milestoneId
+              ? { ...m, achieved: true, timestamp: Date.now() }
+              : m
+          ),
+        },
+      };
+    }),
+
+  toggleStoryPanel: () =>
+    set((s) => ({ showStoryPanel: !s.showStoryPanel })),
+
+  completeStoryMission: () =>
+    set((s) => {
+      if (!s.activeStoryMission) return s;
+
+      const completed = {
+        ...s.activeStoryMission,
+        phase: 'complete' as MissionPhase,
+        endTime: Date.now(),
+      };
+
+      return {
+        activeStoryMission: completed,
+        storyMissionHistory: [completed, ...s.storyMissionHistory].slice(0, 10),
+      };
+    }),
 }));
 
 // ─── Selector helpers (prevent re-renders) ───────────────────────────────────
@@ -638,6 +1151,21 @@ export const selectUI = (s: AppStore): UIState => ({
   establishedConnections: s.establishedConnections,
   droneGroups: s.droneGroups,
   activeGroupId: s.activeGroupId,
+  gridCoverageStats: s.gridCoverageStats,
+  show2DGridMap: s.show2DGridMap,
+  thoughtTree: s.thoughtTree,
+  activeThoughtId: s.activeThoughtId,
+  treeViewMode: s.treeViewMode,
+  showLocalAIStats: s.showLocalAIStats,
+  selectedDroneForLocalAI: s.selectedDroneForLocalAI,
+  localAIReasoning: s.localAIReasoning,
+  zkmlProofs: s.zkmlProofs,
+  showZKMLVerification: s.showZKMLVerification,
+  selectedProofId: s.selectedProofId,
+  activeStoryMission: s.activeStoryMission,
+  storyMissionHistory: s.storyMissionHistory,
+  showStoryPanel: s.showStoryPanel,
+  autoProgressStory: s.autoProgressStory,
 });
 
 // ─── Derived selectors ───────────────────────────────────────────────────────

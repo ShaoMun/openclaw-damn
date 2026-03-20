@@ -360,6 +360,8 @@ function ActiveMessageLine({ fromId, toId }: { fromId: string; toId: string }) {
 
 function DynamicRelayConnection({ index }: { index: number }) {
   const lineRef = useRef<any>(null);
+  const activeMessagePaths = useStore((s) => s.activeMessagePaths);
+  const establishedConnections = useStore((s) => s.establishedConnections);
 
   useFrame((state) => {
     if (!lineRef.current) return;
@@ -372,28 +374,38 @@ function DynamicRelayConnection({ index }: { index: number }) {
       (d) => d.role !== "relay" && d.status === "online",
     );
 
-    // Collect all valid pairs
-    const pairs: { r: THREE.Vector3; o: THREE.Vector3 }[] = [];
+    // Only collect pairs that are actively communicating or have persistent connections
+    const pairs: { r: THREE.Vector3; o: THREE.Vector3; hasConnection: boolean }[] = [];
+
     relayDrones.forEach((relay) => {
       const rPos = dronePositions.get(relay.id);
       if (!rPos) return;
       otherDrones.forEach((other) => {
         const oPos = dronePositions.get(other.id);
         if (!oPos) return;
-        if (rPos.distanceTo(oPos) < 55) {
-          pairs.push({ r: rPos, o: oPos });
+
+        const pairId = [relay.id, other.id].sort().join("-");
+        const hasConnection = activeMessagePaths.has(pairId) || establishedConnections.has(pairId);
+
+        // Only show if actively communicating or has persistent connection
+        if (hasConnection && rPos.distanceTo(oPos) < 55) {
+          pairs.push({ r: rPos, o: oPos, hasConnection });
         }
       });
     });
 
-    // Add relay-to-relay connections too
+    // Add relay-to-relay connections too (only if communicating)
     for (let i = 0; i < relayDrones.length; i++) {
       for (let j = i + 1; j < relayDrones.length; j++) {
         const r1Pos = dronePositions.get(relayDrones[i].id);
         const r2Pos = dronePositions.get(relayDrones[j].id);
-        if (r1Pos && r2Pos && r1Pos.distanceTo(r2Pos) < 70) {
-          // Relays have slightly longer range to each other
-          pairs.push({ r: r1Pos, o: r2Pos });
+        if (!r1Pos || !r2Pos) continue;
+
+        const pairId = [relayDrones[i].id, relayDrones[j].id].sort().join("-");
+        const hasConnection = activeMessagePaths.has(pairId) || establishedConnections.has(pairId);
+
+        if (hasConnection && r1Pos.distanceTo(r2Pos) < 70) {
+          pairs.push({ r: r1Pos, o: r2Pos, hasConnection });
         }
       }
     }
@@ -421,20 +433,33 @@ function DynamicRelayConnection({ index }: { index: number }) {
       if (lineRef.current.material) {
         const material = lineRef.current.material;
 
-        // Beautiful sweeping pulse effect
-        // Use the distance to make shorter connections brighter and longer connections dimmer
+        // Active shimmer effect - brighter when actively communicating
         const dist = pair.r.distanceTo(pair.o);
         const distanceFade = Math.max(0, 1.0 - dist / 55.0);
 
-        // Time-based wave traveling down the line
-        const wave =
-          Math.sin(state.clock.elapsedTime * 3.0 - pair.r.x * 0.1) * 0.5 + 0.5;
+        // Check if this is an active message path (not just persistent)
+        const isActive = activeMessagePaths.has(
+          [store.drones.find(d => {
+            const pos = dronePositions.get(d.id);
+            return pos && pos.equals(pair.r);
+          })?.id || "",
+          store.drones.find(d => {
+            const pos = dronePositions.get(d.id);
+            return pos && pos.equals(pair.o);
+          })?.id || ""
+        ].sort().join("-")
+        );
 
-        // Final opacity calculation — pure white, brighter floor
-        const opacity = (0.45 + wave * 0.5) * distanceFade;
+        const shimmer = isActive
+          ? Math.sin(state.clock.elapsedTime * 15.0) * 0.5 + 0.5  // Fast shimmer for active
+          : Math.sin(state.clock.elapsedTime * 3.0) * 0.5 + 0.5;  // Slow pulse for persistent
+
+        const opacity = isActive
+          ? (0.7 + shimmer * 0.3) * distanceFade  // Brighter for active messages
+          : (0.4 + shimmer * 0.3) * distanceFade; // Dimmer for persistent connections
 
         material.opacity = opacity;
-        material.color.setHex(0xffffff);
+        material.color.setHex(isActive ? 0xffffff : 0xffffff);
 
         if (material.uniforms) {
           if (material.uniforms.opacity)

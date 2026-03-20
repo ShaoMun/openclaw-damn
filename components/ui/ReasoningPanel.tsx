@@ -2,6 +2,7 @@
 
 import { useStore } from '@/lib/store';
 import { Brain, Zap, Eye, AlertCircle, Play, Square, Trash2 } from 'lucide-react';
+import { useMemo } from 'react';
 
 // ─── Status Configuration ─────────────────────────────────────────────────────
 
@@ -64,11 +65,53 @@ export function ReasoningPanel() {
   const aiEnabled = useStore((s) => s.aiEnabled);
   const aiStatus = useStore((s) => s.aiStatus);
   const reasoningLog = useStore((s) => s.reasoningLog);
+  const localAIReasoning = useStore((s) => s.localAIReasoning);
   const toggleAI = useStore((s) => s.toggleAI);
   const clearReasoning = useStore((s) => s.clearReasoning);
 
   const statusConfig = STATUS_CONFIG[aiStatus];
   const StatusIcon = statusConfig.icon;
+
+  // Combine all reasoning into unified log
+  const combinedLog = useMemo(() => {
+    const allEntries: Array<{
+      id: string;
+      timestamp: number;
+      text: string;
+      type: 'thought' | 'action' | 'observation';
+      source: 'AI' | string;
+      sourceType: 'main' | 'drone';
+    }> = [];
+
+    // Add main AI reasoning
+    reasoningLog.forEach(entry => {
+      allEntries.push({
+        id: entry.id,
+        timestamp: entry.timestamp,
+        text: entry.text,
+        type: entry.type,
+        source: 'AI',
+        sourceType: 'main',
+      });
+    });
+
+    // Add drone local AI reasoning
+    Object.entries(localAIReasoning).forEach(([droneId, entries]) => {
+      entries.forEach(entry => {
+        allEntries.push({
+          id: entry.id,
+          timestamp: entry.timestamp,
+          text: `${entry.thought}\n→ ${entry.action}`,
+          type: entry.outcome === 'success' ? 'action' : entry.outcome === 'failed' ? 'observation' : 'thought',
+          source: droneId,
+          sourceType: 'drone',
+        });
+      });
+    });
+
+    // Sort by timestamp
+    return allEntries.sort((a, b) => b.timestamp - a.timestamp).slice(0, 100);
+  }, [reasoningLog, localAIReasoning]);
 
   return (
     <div className="h-full flex flex-col pointer-events-auto bg-black/40 backdrop-blur-md border border-white/10 rounded-sm overflow-hidden">
@@ -77,7 +120,7 @@ export function ReasoningPanel() {
         <div className="flex items-center gap-2">
           <Brain className={`w-3.5 h-3.5 ${aiEnabled ? 'text-green-400' : 'text-white/40'}`} />
           <span className="text-[10px] font-mono text-white/50 uppercase tracking-[0.2em] font-bold">
-            AI Commander
+            Swarm Intelligence Log
           </span>
           {aiEnabled && (
             <span className="flex items-center gap-1 px-1.5 py-0.5 bg-green-500/10 border border-green-500/20 rounded-sm">
@@ -146,32 +189,40 @@ export function ReasoningPanel() {
 
       {/* Reasoning Log */}
       <div className="flex-1 overflow-y-auto scrollbar-thin">
-        {reasoningLog.length === 0 ? (
+        {combinedLog.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-white/20 px-4">
             <Brain className={`w-10 h-10 mb-3 ${aiEnabled ? 'text-blue-400/30 animate-pulse' : 'opacity-30'}`} />
             <span className="text-[10px] font-mono uppercase tracking-wider text-center">
-              {aiEnabled ? 'Initializing AI Commander...' : 'AI Commander Offline'}
+              {aiEnabled ? 'Initializing Swarm Intelligence...' : 'Swarm Intelligence Offline'}
             </span>
             <span className="text-[8px] font-mono text-white/10 mt-1 text-center">
               {aiEnabled
-                ? 'Streaming analysis will appear here'
+                ? 'Click on the map to trigger drone operations'
                 : 'Click Start to enable AI control'
               }
             </span>
           </div>
         ) : (
           <div className="p-3 space-y-1.5">
-            {reasoningLog.map((entry) => {
+            {combinedLog.map((entry) => {
               const typeConfig = TYPE_CONFIG[entry.type];
               const TypeIcon = typeConfig.icon;
+              const isDrone = entry.sourceType === 'drone';
 
               return (
                 <div
                   key={entry.id}
-                  className="flex gap-2 group hover:bg-white/[0.02] rounded px-1 py-0.5 -mx-1 transition-colors"
+                  className={`flex gap-2 group hover:bg-white/[0.02] rounded px-2 py-1 -mx-2 transition-colors ${
+                    isDrone ? 'border-l-2 border-l-cyan-500/30' : ''
+                  }`}
                 >
                   <TypeIcon className={`w-3 h-3 mt-0.5 shrink-0 ${typeConfig.color}`} />
                   <div className="flex-1 min-w-0">
+                    {isDrone && (
+                      <span className="text-[8px] font-mono text-cyan-400/70 mb-0.5">
+                        [{entry.source}]
+                      </span>
+                    )}
                     <p className="text-[9px] font-mono text-white/70 leading-relaxed break-words whitespace-pre-wrap">
                       {typeConfig.prefix}{entry.text}
                     </p>
@@ -190,7 +241,7 @@ export function ReasoningPanel() {
       <div className="flex items-center justify-between px-4 py-2 border-t border-white/5 bg-white/[0.01]">
         <div className="flex items-center gap-3">
           <span className="text-[7px] font-mono text-white/20">
-            {reasoningLog.length} entries
+            {combinedLog.length} entries
           </span>
           {aiEnabled && (
             <>
@@ -205,7 +256,7 @@ export function ReasoningPanel() {
           {aiEnabled && (
             <div className="flex items-center gap-1.5 px-2 py-0.5 bg-green-500/5 border border-green-500/10 rounded-sm">
               <div className="w-1 h-1 rounded-full bg-green-500 animate-pulse" />
-              <span className="text-[7px] font-mono text-green-400/70">GEMINI 2.0</span>
+              <span className="text-[7px] font-mono text-green-400/70">TREE OF THOUGHT</span>
             </div>
           )}
         </div>

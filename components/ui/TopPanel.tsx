@@ -12,26 +12,46 @@ import {
   Grid3X3,
   Activity,
   Radio,
-  Wifi,
   Package,
   Search,
   BatteryCharging,
+  FileCheck,
+  AlertTriangle,
+  ActivityIcon,
+  X,
+  Wrench,
 } from "lucide-react";
 
 const ROLE_ICON: Record<DroneRole, React.ReactNode> = {
   relay: <Radio className="w-3 h-3" />,
-  wifi: <Wifi className="w-3 h-3" />,
   supply: <Package className="w-3 h-3" />,
   scout: <Search className="w-3 h-3" />,
+  medical: <Activity className="w-3 h-3" />,
+  rescue: <AlertTriangle className="w-3 h-3" />,
+  comms: <ActivityIcon className="w-3 h-3" />,
+  fire: <X className="w-3 h-3" />,
   charger: <BatteryCharging className="w-3 h-3" />,
+  heavy: <Package className="w-3 h-3" />,
+  recon: <Search className="w-3 h-3" />,
+  evac: <Activity className="w-3 h-3" />,
+  transport: <Package className="w-3 h-3" />,
+  repair: <Wrench className="w-3 h-3" />,
 };
 
 const ROLE_LABEL: Record<DroneRole, string> = {
   relay: "Relay",
-  wifi: "WiFi",
-  supply: "Supply",
+  supply: "Cargo",
   scout: "Scout",
+  medical: "Medic",
+  rescue: "Rescue",
+  comms: "Comms",
+  fire: "Fire",
   charger: "Power",
+  heavy: "Heavy",
+  recon: "Recon",
+  evac: "Evac",
+  transport: "Hauler",
+  repair: "Fixer",
 };
 
 export function TopPanel() {
@@ -40,9 +60,13 @@ export function TopPanel() {
 
   const showRelays = useStore((s) => s.showRelayPaths);
   const showGrid = useStore((s) => s.showGridOverlay);
+  const show2DGridMap = useStore((s) => s.show2DGridMap);
+  const showZKMLVerification = useStore((s) => s.showZKMLVerification);
   const hiddenRoles = useStore((s) => s.hiddenRoles);
   const toggleRelays = useStore((s) => s.toggleRelayPaths);
   const toggleGrid = useStore((s) => s.toggleGridOverlay);
+  const toggle2DGridMap = useStore((s) => s.toggle2DGridMap);
+  const toggleZKMLVerification = useStore((s) => s.toggleZKMLVerification);
   const toggleRoleFilter = useStore((s) => s.toggleRoleFilter);
 
   const online = drones.filter((d) => d.status === "online").length;
@@ -136,6 +160,24 @@ export function TopPanel() {
           }`}
         >
           <Route className="w-4 h-4" />
+        </button>
+        <button
+          onClick={toggle2DGridMap}
+          title="Toggle 2D Coverage Map"
+          className={`p-2 rounded transition-all hover:bg-white/5 ${
+            show2DGridMap ? "text-cyan-400 bg-cyan-400/10" : "text-white/20"
+          }`}
+        >
+          <Activity className="w-4 h-4" />
+        </button>
+        <button
+          onClick={toggleZKMLVerification}
+          title="Toggle ZKML Verification"
+          className={`p-2 rounded transition-all hover:bg-white/5 ${
+            showZKMLVerification ? "text-purple-400 bg-purple-400/10" : "text-white/20"
+          }`}
+        >
+          <FileCheck className="w-4 h-4" />
         </button>
       </div>
     </div>

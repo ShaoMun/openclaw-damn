@@ -4,6 +4,7 @@ import { useEffect, useRef, useCallback } from 'react';
 import { useStore, selectDrones, selectSOS, selectGrid } from './store';
 import { streamAIReasoning, parseToolCalls } from './gemini-service';
 import { executeToolCall } from './mcp-tools';
+import { generateZKMLProof } from './zkml-utils';
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
@@ -22,6 +23,7 @@ export function useAIController() {
   const addReasoning = useStore((s) => s.addReasoning);
   const setAIStatus = useStore((s) => s.setAIStatus);
   const pushEvent = useStore((s) => s.pushEvent);
+  const addZKMLProof = useStore((s) => s.addZKMLProof);
 
   // Refs to prevent stale closures
   const isRunning = useRef(false);
@@ -64,6 +66,14 @@ export function useAIController() {
       // Add complete reasoning as single entry after streaming finishes
       if (fullResponse.trim()) {
         addReasoning(fullResponse, "thought");
+
+        // Generate ZKML proof for this reasoning
+        try {
+          const proof = await generateZKMLProof(fullResponse);
+          addZKMLProof(proof);
+        } catch (error) {
+          console.error("Failed to generate ZKML proof:", error);
+        }
       }
 
       // Parse and execute tool calls

@@ -7,6 +7,7 @@ import { useStore } from "@/lib/store";
 import { createMockData } from "@/lib/mockData";
 import { useSimulation } from "@/lib/useSimulation";
 import { useAIController } from "@/lib/useAIController";
+import { useLocalAI } from "@/lib/useLocalAI";
 
 export default function Home() {
   const hydrate = useStore((s) => s.hydrate);
@@ -16,6 +17,9 @@ export default function Home() {
 
   // Start the AI controller
   useAIController();
+
+  // Start the Local AI system
+  useLocalAI();
 
   useEffect(() => {
     hydrate(createMockData());

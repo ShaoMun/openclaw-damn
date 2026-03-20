@@ -1,7 +1,7 @@
 'use client';
 
 import { Canvas } from '@react-three/fiber';
-import { OrbitControls, Stage } from '@react-three/drei';
+import { OrbitControls } from '@react-three/drei';
 import { Selection, EffectComposer, Bloom, Vignette, Noise } from '@react-three/postprocessing';
 import { Terrain } from './Terrain';
 import { Drones } from './Drones';
@@ -11,6 +11,9 @@ import { RelayPaths } from './RelayPath';
 import { CameraController } from './CameraController';
 import { DroneChatBubbles } from './DroneChatBubbles';
 import { ActiveScans } from './ActiveScans';
+import { ClickMarkers } from './ClickMarkers';
+import { GroundClickHandler } from './GroundClickHandler';
+import { SOSDetectionMonitor } from './SOSDetectionMonitor';
 import { Suspense } from 'react';
 
 export function Scene() {
@@ -38,6 +41,9 @@ export function Scene() {
             <RelayPaths />
             <DroneChatBubbles />
             <ActiveScans />
+            <ClickMarkers />
+            <GroundClickHandler />
+            <SOSDetectionMonitor />
           </Selection>
 
           <EffectComposer multisampling={4}>

@@ -25,4 +25,5 @@ export interface AgentInstruction {
   requiresOnline: boolean;             // some tools need live API access
   status: InstructionStatus;
   executedAt?: number;
-  result?: string;                     // human-readable outcome after
+  result?: string;                     // human-readable outcome after execution
+}

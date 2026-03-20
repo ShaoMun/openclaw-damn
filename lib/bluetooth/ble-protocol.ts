@@ -29,4 +29,6 @@ export const BLE_UUIDS = {
 
 // ─── BLE Network Constants ────────────────────────────────────────────────────
 
-/** Simulated BLE range in
+/** Simulated BLE range in meters */
+export const BLE_RANGE_METERS = 30;
+

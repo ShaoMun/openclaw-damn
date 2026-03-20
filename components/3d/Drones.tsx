@@ -22,11 +22,19 @@ const MOVEMENT_SPEED = 0.3;
 const TARGET_TOLERANCE = 0.5;
 
 const ROLE_LABEL: Record<DroneRole, string> = {
-  relay:  'Relay',
-  wifi:   'WiFi',
-  supply: 'Cargo',
-  scout:  'Scout',
-  charger: 'Power',
+  relay:     'Relay',
+  supply:    'Cargo',
+  scout:     'Scout',
+  medical:   'Medic',
+  rescue:    'Rescue',
+  comms:     'Comms',
+  fire:      'Fire',
+  charger:   'Power',
+  heavy:     'Heavy',
+  recon:     'Recon',
+  evac:      'Evac',
+  transport: 'Hauler',
+  repair:    'Fixer',
 };
 
 const STATUS_DOT: Record<string, string> = {

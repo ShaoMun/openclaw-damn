@@ -6,6 +6,8 @@ import { RightPanel } from "./RightPanel";
 import { DroneReasoningModal } from "./DroneReasoningModal";
 import { DroneSwitchDialog } from "./DroneSwitchDialog";
 import { MessagePassingPanel } from "./MessagePassingPanel";
+import { GridMap2D } from "./GridMap2D";
+import { ZKMLVerificationPanel } from "./ZKMLVerificationPanel";
 import { useStore } from "@/lib/store";
 
 export function Dashboard() {
@@ -60,6 +62,12 @@ export function Dashboard() {
           drone2Id={secondSelectedDroneId}
         />
       )}
+
+      {/* 2D Grid Map Overlay */}
+      <GridMap2D />
+
+      {/* ZKML Verification Panel */}
+      <ZKMLVerificationPanel />
     </div>
   );
 }

@@ -428,14 +428,14 @@ export const mcpTools: MCPTool[] = [
         });
       }
 
-      // Add active scan to 3D view
-      store.addActiveScan({
-        droneId: drone.id,
-        position: [drone.position[0], 0, drone.position[2]],
-        radius: 25,
-        duration: 8000, // 8 seconds scan
-        targets,
-      });
+      // Visual scan disabled - only SOS flow triggers scans now
+      // store.addActiveScan({
+      //   droneId: drone.id,
+      //   position: [drone.position[0], 0, drone.position[2]],
+      //   radius: 25,
+      //   duration: 8000, // 8 seconds scan
+      //   targets,
+      // });
 
       if (targetsDetected > 0) {
         const targetTemp = (35 + Math.random() * 10).toFixed(1);

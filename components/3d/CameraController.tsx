@@ -100,10 +100,10 @@ export function CameraController() {
     // Final zoom target
     targetLookAt.current.set(x, y, z);
 
-    // Calculate new cam position: 80 units away along the current viewing angle
+    // Calculate new cam position: 120 units away along the current viewing angle (less zoom)
     targetCamPos.current
       .copy(targetLookAt.current)
-      .add(currentCamDir.multiplyScalar(80));
+      .add(currentCamDir.multiplyScalar(120));
 
     isTransitioning.current = true;
     if (controls) (controls as any).enabled = false;

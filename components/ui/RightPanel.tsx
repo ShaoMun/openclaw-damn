@@ -8,24 +8,40 @@ import {
   type DroneRole,
   type SOSSignal,
 } from "@/lib/store";
-import { Radio, Wifi, Package, Activity, X, AlertTriangle, Search, BatteryCharging } from "lucide-react";
+import { Radio, Package, Activity, X, AlertTriangle, Search, BatteryCharging, ActivityIcon, Wrench } from "lucide-react";
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const ROLE_ICON: Record<DroneRole, React.ReactNode> = {
   relay: <Radio className="w-3 h-3" />,
-  wifi: <Wifi className="w-3 h-3" />,
   supply: <Package className="w-3 h-3" />,
   scout: <Search className="w-3 h-3" />,
+  medical: <Activity className="w-3 h-3" />,
+  rescue: <AlertTriangle className="w-3 h-3" />,
+  comms: <ActivityIcon className="w-3 h-3" />,
+  fire: <X className="w-3 h-3" />,
   charger: <BatteryCharging className="w-3 h-3" />,
+  heavy: <Package className="w-3 h-3" />,
+  recon: <Search className="w-3 h-3" />,
+  evac: <Activity className="w-3 h-3" />,
+  transport: <Package className="w-3 h-3" />,
+  repair: <Wrench className="w-3 h-3" />,
 };
 
 const ROLE_COLOR: Record<DroneRole, string> = {
   relay: "#ffffff",
-  wifi: "#ffffff",
   supply: "#ffffff",
   scout: "#ffffff",
+  medical: "#ffffff",
+  rescue: "#ffffff",
+  comms: "#ffffff",
+  fire: "#ffffff",
   charger: "#ffffff",
+  heavy: "#ffffff",
+  recon: "#ffffff",
+  evac: "#ffffff",
+  transport: "#ffffff",
+  repair: "#ffffff",
 };
 
 const STATUS_DOT: Record<string, string> = {

@@ -2,7 +2,7 @@ import { useRef, useMemo, useState } from 'react';
 import { useFrame, extend } from '@react-three/fiber';
 import * as THREE from 'three';
 import { shaderMaterial } from '@react-three/drei';
-import { Markers, MarkerData } from './Markers';
+// import { Markers, MarkerData } from './Markers'; // DISABLED - WiFi zones removed
 import { dronePositions } from './Drones';
 import { useStore } from '@/lib/store';
 import { getTerrainZ, TERRAIN_WIDTH, TERRAIN_HEIGHT, TERRAIN_SEGMENTS } from '@/lib/terrain';
@@ -98,6 +98,7 @@ const TerrainScansMaterial = shaderMaterial(
     uScanRadii: [0, 0, 0, 0, 0],
     uScanStartTimes: [0, 0, 0, 0, 0],
     uScanDurations: [0, 0, 0, 0, 0],
+    uScanIntensities: [0, 0, 0, 0, 0], // Intensity per scan (0.0 to 1.0)
   },
   // vertex shader
   `
@@ -115,6 +116,7 @@ const TerrainScansMaterial = shaderMaterial(
   uniform float uScanRadii[5];
   uniform float uScanStartTimes[5];
   uniform float uScanDurations[5];
+  uniform float uScanIntensities[5];
 
   varying vec3 vPosition;
 
@@ -161,7 +163,8 @@ const TerrainScansMaterial = shaderMaterial(
       float radius = uScanRadii[i];
       float startTime = uScanStartTimes[i];
       float duration = uScanDurations[i];
-      
+      float intensity = uScanIntensities[i]; // Get intensity for this scan
+
       float elapsed = uTime - startTime;
       if (elapsed < 0.0 || elapsed > duration) continue;
 
@@ -189,14 +192,14 @@ const TerrainScansMaterial = shaderMaterial(
       color += vec3(0.5, 0.8, 1.0) * smoothstep(0.0, 0.02, diff) * (1.0 - smoothstep(0.02, 0.04, diff)); // Cyan/Blue hot beam edge
 
       float alpha = 1.0 - smoothstep(radius * 0.95, radius, dist);
-      alpha *= max(beam, 0.4) * fade;
+      alpha *= max(beam, 0.4) * fade * intensity; // Apply intensity to alpha
 
       totalColor += color * alpha;
       totalAlpha += alpha;
     }
 
     if (totalAlpha <= 0.0) discard;
-    
+
     // Keep colors raw and bright without muddying them
     totalColor = clamp(totalColor * 3.0, 0.0, 2.0);
 
@@ -269,7 +272,7 @@ export function Terrain() {
   const meshRef = useRef<THREE.Group>(null);
   const materialRef = useRef<any>(null);
   const scansMaterialRef = useRef<any>(null);
-  const commsMaterialRef = useRef<any>(null);
+  // const commsMaterialRef = useRef<any>(null); // DISABLED - Comms overlay removed
   const setCameraFocus = useStore((s) => s.setCameraFocus);
   const activeScans = useStore((s) => s.activeScans);
   const pointerDownPos = useRef<{ x: number; y: number } | null>(null);
@@ -278,7 +281,7 @@ export function Terrain() {
   const height = TERRAIN_HEIGHT;
   const segments = TERRAIN_SEGMENTS;
 
-  const { geometry, markers } = useMemo(() => {
+  const { geometry } = useMemo(() => {
     const geo = new THREE.PlaneGeometry(width, height, segments, segments);
     const posAttribute = geo.attributes.position;
 
@@ -290,14 +293,15 @@ export function Terrain() {
 
     geo.computeVertexNormals();
 
-    const generatedMarkers: MarkerData[] = [
-      { position: [20, -15, getTerrainZ(20, -15)], type: 'danger', delay: 0 },
-      { position: [-40, 30, getTerrainZ(-40, 30)], type: 'safe', delay: 1 },
-      { position: [50, 40, getTerrainZ(50, 40)], type: 'safe', delay: 2 },
-      { position: [-20, -50, getTerrainZ(-20, -50)], type: 'safe', delay: 3 },
-    ];
+    // WiFi zone markers - DISABLED
+    // const generatedMarkers: MarkerData[] = [
+    //   { position: [20, -15, getTerrainZ(20, -15)], type: 'danger', delay: 0 },
+    //   { position: [-40, 30, getTerrainZ(-40, 30)], type: 'safe', delay: 1 },
+    //   { position: [50, 40, getTerrainZ(50, 40)], type: 'safe', delay: 2 },
+    //   { position: [-20, -50, getTerrainZ(-20, -50)], type: 'safe', delay: 3 },
+    // ];
 
-    return { geometry: geo, markers: generatedMarkers };
+    return { geometry: geo };
   }, []);
 
   useFrame((state) => {
@@ -326,25 +330,28 @@ export function Terrain() {
         // Using actual seconds for time
         scansMaterialRef.current.uScanStartTimes[i] = state.clock.elapsedTime - (Date.now() - scan.startTime) / 1000;
         scansMaterialRef.current.uScanDurations[i] = scan.duration / 1000;
+        // Intensity (default to 1.0 if not specified)
+        scansMaterialRef.current.uScanIntensities[i] = scan.intensity ?? 1.0;
       }
     }
-    
-    if (commsMaterialRef.current) {
-      commsMaterialRef.current.uTime = state.clock.elapsedTime;
-      const onlineDrones = useStore.getState().drones.filter(d => d.status === 'online');
-      const count = Math.min(onlineDrones.length, 10);
-      commsMaterialRef.current.uDroneCount = count;
-      
-      for (let i = 0; i < count; i++) {
-        // Safe check for dronePositions
-        const dPos = dronePositions.get(onlineDrones[i].id);
-        if (dPos) {
-           commsMaterialRef.current.uDroneCenters[i].set(dPos.x, -dPos.z);
-        } else {
-           commsMaterialRef.current.uDroneCenters[i].set(onlineDrones[i].position[0], -onlineDrones[i].position[2]);
-        }
-      }
-    }
+
+    // Comms overlay updates - DISABLED
+    // if (commsMaterialRef.current) {
+    //   commsMaterialRef.current.uTime = state.clock.elapsedTime;
+    //   const onlineDrones = useStore.getState().drones.filter(d => d.status === 'online');
+    //   const count = Math.min(onlineDrones.length, 10);
+    //   commsMaterialRef.current.uDroneCount = count;
+    //
+    //   for (let i = 0; i < count; i++) {
+    //     // Safe check for dronePositions
+    //     const dPos = dronePositions.get(onlineDrones[i].id);
+    //     if (dPos) {
+    //        commsMaterialRef.current.uDroneCenters[i].set(dPos.x, -dPos.z);
+    //     } else {
+    //        commsMaterialRef.current.uDroneCenters[i].set(onlineDrones[i].position[0], -onlineDrones[i].position[2]);
+    //     }
+    //   }
+    // }
   });
 
   return (
@@ -362,11 +369,11 @@ export function Terrain() {
         const dist = Math.sqrt(dx * dx + dy * dy);
         pointerDownPos.current = null;
 
-        // Only treat as click if pointer barely moved (not a drag)
-        if (dist < 4) {
-          e.stopPropagation();
-          setCameraFocus([e.point.x, e.point.y, e.point.z]);
-        }
+        // Camera zoom DISABLED - clicking no longer zooms the camera
+        // if (dist < 4) {
+        //   e.stopPropagation();
+        //   setCameraFocus([e.point.x, e.point.y, e.point.z]);
+        // }
       }}
     >
       {/* Base Wireframe Terrain */}
@@ -378,30 +385,30 @@ export function Terrain() {
       {/* Scan Overlay Mesh (Solid, perfectly hugs terrain geometry) */}
       <mesh geometry={geometry}>
         {/* @ts-ignore */}
-        <terrainScansMaterial 
-          ref={scansMaterialRef} 
-          transparent={true} 
-          depthWrite={false} 
-          blending={THREE.AdditiveBlending} 
-          polygonOffset={true} 
-          polygonOffsetFactor={-1} 
+        <terrainScansMaterial
+          ref={scansMaterialRef}
+          transparent={true}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          polygonOffset={true}
+          polygonOffsetFactor={-1}
         />
       </mesh>
 
-      {/* Comms Range Radial Overlay */}
-      <mesh geometry={geometry}>
-        {/* @ts-ignore */}
-        <terrainCommsMaterial 
-          ref={commsMaterialRef} 
-          transparent={true} 
-          depthWrite={false} 
-          blending={THREE.AdditiveBlending} 
-          polygonOffset={true} 
-          polygonOffsetFactor={-2} 
+      {/* Comms Range Radial Overlay - DISABLED */}
+      {/* <mesh geometry={geometry}>
+        <terrainCommsMaterial
+          ref={commsMaterialRef}
+          transparent={true}
+          depthWrite={false}
+          blending={THREE.AdditiveBlending}
+          polygonOffset={true}
+          polygonOffsetFactor={-2}
         />
-      </mesh>
-      
-      <Markers markers={markers} />
+      </mesh> */}
+
+      {/* WiFi Zone Markers - DISABLED */}
+      {/* <Markers markers={markers} /> */}
     </group>
   );
 }
