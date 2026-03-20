@@ -142,6 +142,10 @@ interface AppStore extends UIState {
   relayPaths: RelayPath[];
   eventLog: LogEntry[];
 
+  // MCP connection state
+  mcpConnected: boolean;
+  mcpConnectionError: string | null;
+
   // Data actions
   hydrate: (data: {
     drones: Drone[];
@@ -203,6 +207,9 @@ interface AppStore extends UIState {
   joinGroup: (groupId: string, droneId: string) => void;
   leaveGroup: (groupId: string, droneId: string) => void;
   openGroupChat: (groupId: string | null) => void;
+
+  // MCP actions
+  setMCPConnected: (connected: boolean, error?: string) => void;
 }
 
 export const useStore = create<AppStore>((set) => ({
@@ -236,6 +243,10 @@ export const useStore = create<AppStore>((set) => ({
   establishedConnections: new Set(),
   droneGroups: {},
   activeGroupId: null,
+
+  // MCP state defaults
+  mcpConnected: false,
+  mcpConnectionError: null,
 
   // Data actions
   hydrate: (data) => set(data),
@@ -606,6 +617,13 @@ export const useStore = create<AppStore>((set) => ({
     }),
     
   openGroupChat: (groupId) => set({ activeGroupId: groupId }),
+
+  // MCP actions
+  setMCPConnected: (connected, error) =>
+    set({
+      mcpConnected: connected,
+      mcpConnectionError: error || null,
+    }),
 }));
 
 // ─── Selector helpers (prevent re-renders) ───────────────────────────────────

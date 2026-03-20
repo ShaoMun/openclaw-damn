@@ -133,7 +133,7 @@ function replaceTemplate(template: string, replacements: Record<string, string>)
   return result;
 }
 
-export function useSimulation() {
+export function useSimulation(enabled: boolean = true) {
   const drones = useStore(selectDrones);
   const sosSignals = useStore(selectSOS);
   const updateDrone = useStore((s) => s.updateDrone);
@@ -143,6 +143,8 @@ export function useSimulation() {
   const tickCount = useRef(0);
 
   useEffect(() => {
+    if (!enabled) return;
+
     const interval = setInterval(() => {
       tickCount.current++;
       const store = useStore.getState();
