@@ -1,7 +1,12 @@
-<img width="840" height="212" alt="Screenshot 2026-03-21 at 11 21 55 AM" src="https://github.com/user-attachments/assets/9ad06f9d-74d8-4ed3-9454-62f49151a035" />
-# DAMNdelion
+<p align="center">
+  <img width="840" height="212" alt="Screenshot 2026-03-21 at 11 21 55 AM" src="https://github.com/user-attachments/assets/9ad06f9d-74d8-4ed3-9454-62f49151a035" />
+</p>
 
-> **DAMN** + **delion** — Decentralized Agent Memory Network for Disaster Response
+<h1 align="center">𖤣𖥧 DAMNdelion 𖥧𖤣</h1>
+
+<p align="center">
+  <b>DAMN</b> + <b>delion</b> — Decentralized Agent Memory Network for Disaster Response
+</p>
 
 ### Like **dandelion** seeds spreading on the wind, our autonomous drones communicate and coordinate across disaster zones without relying on centralized infrastructure.
 
