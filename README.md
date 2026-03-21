@@ -3,7 +3,6 @@
 </p>
 
 <h1 align="center">𖤣𖥧 DAMNdelion 𖥧𖤣</h1>
-
 <p align="center">
   <b>DAMN</b> + <b>delion</b> — Decentralized Agent Memory Network for Disaster Response
 </p>
@@ -63,7 +62,9 @@ When hurricanes, earthquakes, or wildfires strike, the first casualty is often c
 DAMNdelion is a **decentralized, offline-first drone swarm** that doesn't depend on the internet or any central server. Our architecture combines three layers of intelligence:
 
 ### 3.1 Offline Architecture
-<img width="760" height="115" alt="Screenshot 2026-03-21 at 11 26 28 AM" src="https://github.com/user-attachments/assets/c4dad2d2-838a-49cf-beea-48a862f4e1cb" />
+<p align="center">
+  <img width="760" height="115" alt="Screenshot 2026-03-21 at 11 26 28 AM" src="https://github.com/user-attachments/assets/c4dad2d2-838a-49cf-beea-48a862f4e1cb" />
+</p>
 
 **How it works without internet:**
 
@@ -104,7 +105,9 @@ DAMNdelion is built for **trust and verification** in disaster scenarios where s
 - Privacy-by-design for sensitive disaster response data
 
 ### 3.3 Communication Topology
-<img width="490" height="474" alt="Screenshot 2026-03-21 at 11 25 12 AM" src="https://github.com/user-attachments/assets/81c49656-b15c-454c-9a12-dac0c13098f7" />
+<p align="center">
+  <img width="490" height="474" alt="Screenshot 2026-03-21 at 11 25 12 AM" src="https://github.com/user-attachments/assets/81c49656-b15c-454c-9a12-dac0c13098f7" />
+</p>
 
 DAMNdelion uses a **hybrid mesh + multi-star** BLE topology that maximizes coverage and resilience.
 
@@ -125,7 +128,10 @@ DAMNdelion uses a **hybrid mesh + multi-star** BLE topology that maximizes cover
 ### 3.4 Agent Reasoning
 
 DAMNdelion uses a **three-tier AI hierarchy** with specialized reasoning at each level:
-<img width="728" height="381" alt="Screenshot 2026-03-21 at 11 27 02 AM" src="https://github.com/user-attachments/assets/5ffc5902-3796-4587-8e95-ca2b9816e418" />
+<p align="center">
+  <img width="728" height="381" alt="Screenshot 2026-03-21 at 11 27 02 AM" src="https://github.com/user-attachments/assets/5ffc5902-3796-4587-8e95-ca2b9816e418" />
+</p>
+
 #### Master Agent — Cloud Orchestrator (Online Mode)
 - **Model**: Mistral Small Latest with streaming
 - **Reasoning**: Tree-of-Thought (ToT) for complex strategic decisions
@@ -145,13 +151,17 @@ DAMNdelion uses a **three-tier AI hierarchy** with specialized reasoning at each
 
 #### Drone Agents — Autonomous Specialists
 Each drone runs its own **local SLM (Small Language Model)** for independent reasoning:
-<img width="513" height="383" alt="Screenshot 2026-03-21 at 11 27 42 AM" src="https://github.com/user-attachments/assets/69ffe987-cc3f-4660-baf6-5e5c48617552" />
+<p align="center">
+  <img width="513" height="383" alt="Screenshot 2026-03-21 at 11 27 42 AM" src="https://github.com/user-attachments/assets/69ffe987-cc3f-4660-baf6-5e5c48617552" />
+</p>
 
 **Tree-of-Thought > Chain-of-Thought**
 - ToT outperforms CoT by **+70% on GAMEo24 Benchmark** for multi-step spatial reasoning tasks
 - Each drone explores multiple decision branches before committing
 - Better for 3D navigation, multi-objective optimization, and emergency response
-<img width="819" height="479" alt="Screenshot 2026-03-21 at 11 29 34 AM" src="https://github.com/user-attachments/assets/32b494e5-e30b-4a8c-bf06-4e6787f648df" />
+<p align="center">
+  <img width="819" height="479" alt="Screenshot 2026-03-21 at 11 29 34 AM" src="https://github.com/user-attachments/assets/32b494e5-e30b-4a8c-bf06-4e6787f648df" />
+</p>
 
 **Specialized Roles (5 types):**
 | Role | Mission | Autonomous Behavior |
@@ -274,7 +284,10 @@ Agent.reason()
 ---
 
 ## 6. Business Model
-<img width="845" height="467" alt="Screenshot 2026-03-21 at 11 30 11 AM" src="https://github.com/user-attachments/assets/e31792d6-7f61-49e0-81ed-4baac5415ccb" />
+<p align="center">
+  <img width="845" height="467" alt="Screenshot 2026-03-21 at 11 30 11 AM" src="https://github.com/user-attachments/assets/e31792d6-7f61-49e0-81ed-4baac5415ccb" />
+</p>
+
 ### 6.1 Target Customers
 
 | Segment | Examples | Use Case |
